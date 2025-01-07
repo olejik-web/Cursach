@@ -5,20 +5,233 @@
 #include <math.h>
 #include <set>
 #include <algorithm>
+#include <stack>
+#include <memory>
 
 using namespace std;
 map<string, vector<string> > Grammar;
 vector<string> Variables = {};
 vector<string> Terminals = {
-"+", "-", "^", "0", "1", "2", "3", "4", "5", "6", "7", "8", "9",
-"x", "t", "/", "ln(", "(", ")", "c", "s", "tg(", "os(", "qrt(", 
-"in(", "g(", "exp("};
+"+", "-", "^", "*", "0", "1", "2", "3", "4", "5", "6", "7", "8", "9",
+"x", "t", "/", "ln(", "(", ")", "c", "s", "os(", "qrt(", 
+"in(", "g(", "exp(", "pi"};
+vector<string>UsedWords = { "+", "-", "^", "*", "/", "0", "1", "2", "3", "4", "5", "6", "7",
+"8", "9", "pi", "x", "t", "cos", "sin", "tg", "ctg", "sqrt", "exp", "ln", "(", ")"
+};
+vector<string>Operators = { "+", "-", "^", "*", "/", "(", ")" };
+vector<string>Functions = { "cos", "sin", "tg", "ctg", "sqrt", "exp", "ln" };
+
 vector<string> NotTerminals = {
 "A", "B", "C", "D", "E", "F", "G", "H", "I",
 "J", "K", "L", "M", "N", "P", "Q", "T" };
 string StartNotTerminal = "E";
-map<string, set<string>>FIRST;
-map<string, set<string>>FOLLOW;
+map<string, set<string>> FIRST;
+map<string, set<string>> FOLLOW;
+map<string, map<string, vector<pair<string, vector<string>>>>> SyntaxAnalyseTable;
+
+enum TokenType 
+{
+    Plus=0,
+    Multiply,
+    Minus,
+    Division,
+    LeftBracket,
+    RightBracket,
+    Factorization,
+    Num
+};
+
+class Node
+{
+public:
+    Node(Node* parent, string& value);
+    string value() const;
+    Node* parent() const;
+    Node* child(int inx) const;
+    Node* backChild();
+    void addChild(string& value);
+    void setParent(Node* parent);
+    void setValue(string& value);
+    void printTree(int level);
+    void reverseTree();
+    int childsSize();
+    void collectExpression();
+    void collectTokens();
+    string expression();
+
+private:
+    string m_value;
+    Node* m_parent;
+    vector<unique_ptr<Node>> m_childs;
+    double m_calcValue{0};
+    vector<pair<string, bool>> m_tokens;
+    string m_expression{""};
+};
+
+bool isFunction(string& value)
+{
+    bool flag = false;
+    for (auto function : Functions)
+        flag |= value == function;
+    return flag;
+}
+
+bool isOperator(string& value)
+{
+    bool flag = false;
+    for (auto op : Operators)
+        flag |= value == op;
+    return flag;
+}
+
+void Node::collectTokens()
+{
+    int ip = 0;
+    bool haveMinus = false;
+    bool minusFlag = false;
+    vector<pair<string, bool>> tmp;
+    while (ip < m_expression.size())
+    {
+        for (auto word : UsedWords)
+        {
+            if (ip + word.size() <= m_expression.size() && m_expression.substr(ip, word.size()) == word)
+            {
+                if (word == "-")
+                {
+                    haveMinus ^= true;
+                    minusFlag = true;
+                }
+                else if (minusFlag) 
+                {
+                    if (tmp.empty() || (tmp.back().first == "-" || tmp.back().first == "+"
+                        || tmp.back().first == "*" || tmp.back().first == "/" ||
+                        tmp.back().first == "("))
+                        tmp.push_back({word, haveMinus});
+                    else
+                    {
+                        if (haveMinus)
+                            tmp.push_back({ "-", false });
+                        else
+                            tmp.push_back({ "+", false });
+                        tmp.push_back({ word, false });
+                    }
+                    haveMinus = false;
+                    minusFlag = false;
+                }
+                else 
+                    tmp.push_back({ word, false });
+                ip += word.size();
+                break;
+            }
+        }
+    }
+    for (auto p : tmp)
+    {
+        if (!isOperator(p.first) && !isFunction(p.first))
+        {
+            if (!m_tokens.empty() && !isOperator(m_tokens.back().first) 
+                && !isFunction(m_tokens.back().first))
+            {
+                m_tokens.back().first += p.first;
+                m_tokens.back().second = m_tokens.back().second || p.second;
+            }
+            else
+                m_tokens.push_back(p);
+        }
+        else 
+            m_tokens.push_back(p);
+    }
+}
+
+void Node::collectExpression() 
+{
+    for (auto terminal : Terminals)
+    {
+        if (m_value == terminal)
+        {
+            m_expression = m_value;
+            return;
+        }
+    }
+    for (auto& child : m_childs)
+    {
+        child->collectExpression();
+        m_expression += child->expression();
+    }
+};
+
+inline string Node::expression()
+{
+    return m_expression;
+}
+
+void Node::printTree(int level)
+{
+    for (int i=0; i<level; i++)
+        cout << "  ";
+    cout << m_value << " " << m_expression << " ";
+    if (m_value == "E")
+    {
+        collectTokens();
+        for (auto t : m_tokens)
+            cout << "{" << t.first << " " << t.second << "} ";
+    }
+    cout << "\n";
+    for (auto& child : m_childs)
+        child->printTree(level + 1);
+}
+
+void Node::reverseTree()
+{
+    reverse(m_childs.begin(), m_childs.end());
+    for (auto& child : m_childs)
+        child->reverseTree();
+}
+
+int Node::childsSize()
+{
+    return m_childs.size();
+}
+
+Node::Node(Node* parent, string& value) :
+    m_value(value),
+    m_parent(parent)
+{};
+
+inline Node* Node::backChild()
+{
+    return m_childs.back().get();
+}
+
+inline void Node::setParent(Node* parent)
+{
+    m_parent = parent;
+}
+
+inline void Node::setValue(string& value)
+{
+    m_value = value;
+}
+
+inline void Node::addChild(string& value)
+{
+    m_childs.push_back(make_unique<Node>(this, value));
+}
+
+inline string Node::value() const
+{
+    return m_value;
+}
+
+inline Node* Node::parent() const
+{
+    return m_parent;
+}
+
+inline Node* Node::child(int inx) const
+{
+    return m_childs[inx].get();
+}
 
 set<string> fromTokensFIRST(vector<string>& tokens)
 {
@@ -116,38 +329,109 @@ map<string, vector<vector<string>>> tokensFromGrammar(map<string, vector<string>
         {
             vector<string>tokens;
             int inx = 0;
-            while (inx < prod.size())
+            if (prod.empty())
+                tokens.push_back("");
+            else
             {
-                string choosenTerminal = "";
-                string choosenNotTerminal = "";
-                for (auto terminal : terminals)
+                while (inx < prod.size())
                 {
-                    if (inx + terminal.size() <= prod.size()
-                        && prod.substr(inx, terminal.size()) == terminal
-                        && terminal.size() > choosenTerminal.size())
-                        choosenTerminal = terminal;
-                }
-                if (!choosenTerminal.empty())
-                {
-                    tokens.push_back(choosenTerminal);
-                    inx += choosenTerminal.size();
-                }
-                for (auto notTerminal : notTerminals)
-                {
-                    if (inx + notTerminal.size() <= prod.size()
-                        && prod.substr(inx, notTerminal.size()) == notTerminal)
-                        choosenNotTerminal = notTerminal;
-                }
-                if (!choosenNotTerminal.empty())
-                {
-                    tokens.push_back(choosenNotTerminal);
-                    inx += choosenNotTerminal.size();
+                    string choosenTerminal = "";
+                    string choosenNotTerminal = "";
+                    for (auto terminal : terminals)
+                    {
+                        if (inx + terminal.size() <= prod.size()
+                            && prod.substr(inx, terminal.size()) == terminal
+                            && terminal.size() > choosenTerminal.size())
+                            choosenTerminal = terminal;
+                    }
+                    if (!choosenTerminal.empty())
+                    {
+                        tokens.push_back(choosenTerminal);
+                        inx += choosenTerminal.size();
+                    }
+                    for (auto notTerminal : notTerminals)
+                    {
+                        if (inx + notTerminal.size() <= prod.size()
+                            && prod.substr(inx, notTerminal.size()) == notTerminal)
+                            choosenNotTerminal = notTerminal;
+                    }
+                    if (!choosenNotTerminal.empty())
+                    {
+                        tokens.push_back(choosenNotTerminal);
+                        inx += choosenNotTerminal.size();
+                    }
                 }
             }
             tokensGrammar[notTerminal].push_back(tokens);
         }
     }
     return tokensGrammar;
+}
+
+void fillTable(map<string, vector<string>>& grammar,
+    vector<string>& terminals, vector<string>& notTerminals)
+{
+    map<string, vector<pair<string, vector<string>>>> terminalsMap;
+    for (auto terminal : terminals)
+        terminalsMap[terminal] = vector<pair<string, vector<string>>>();
+    terminalsMap["$"] = vector<pair<string, vector<string>>>();
+    for (auto notTerminal : notTerminals)
+        SyntaxAnalyseTable[notTerminal] = terminalsMap;
+    map<string, vector<vector<string>>>tokensGrammar =
+        tokensFromGrammar(grammar, terminals, notTerminals);
+    for (auto p : tokensGrammar)
+    {
+        for (auto tokens : p.second)
+        {
+            set<string> first = fromTokensFIRST(tokens);
+            for (auto a : first)
+            {
+                if (a.empty())
+                {
+                    for (auto b : FOLLOW[p.first])
+                    {
+                        for (auto q : terminals)
+                        {
+                            if (b == q)
+                            {
+                                SyntaxAnalyseTable[p.first][b].push_back({ p.first, tokens });
+                                break;
+                            }
+                        }
+                        if (b == "$")
+                            SyntaxAnalyseTable[p.first][b].push_back({ p.first, tokens });
+                    }
+                }
+                for (auto q : terminals)
+                {
+                    if (q == a)
+                    {
+                        SyntaxAnalyseTable[p.first][a].push_back({ p.first, tokens });
+                        break;
+                    }
+                }
+            }
+        }
+    }
+}
+
+void printTable()
+{
+    for (auto p : SyntaxAnalyseTable)
+    {
+        for (auto v : p.second)
+        {
+            cout << "(" << p.first << ", " << v.first << "): ";
+            for (auto q : v.second)
+            {
+                cout << q.first << "-->";
+                for (auto c : q.second)
+                    cout << c << " ";
+                cout << "|";
+            }
+            cout << "size: " << v.second.size() << "\n";
+        }
+    }
 }
 
 bool checkLL(map<string, vector<string>>& grammar, vector<string>& terminals,
@@ -165,30 +449,10 @@ bool checkLL(map<string, vector<string>>& grammar, vector<string>& terminals,
             {
                 set<string>bettaFirst = fromTokensFIRST(p.second[j]);
                 set<string>intersectionResult = intersectionOfSets(alphaFirst, bettaFirst);
-                /* if (!intersectionResult.empty())
-                {
-                    cout << p.first << "\n";
-                    for (auto s : p.second[j])
-                        cout << s << " ";
-                    cout << "\n";
-                    for (auto s : p.second[i])
-                        cout << s << " ";
-                    cout << "\n---------------------\n";
-                }*/
                 isLL = isLL && intersectionResult.empty();
                 if (alphaFirst.find("") != alphaFirst.end())
                 {
                     intersectionResult = intersectionOfSets(bettaFirst, FOLLOW[p.first]);
-                    /* if (!intersectionResult.empty())
-                    {
-                        cout << "******" << p.first << "\n";
-                        for (auto s : bettaFirst)
-                            cout << s << " ";
-                        cout << "\n";
-                        for (auto s : FOLLOW[p.first])
-                            cout << s << " ";
-                        cout << "\n---------------------\n";
-                    }*/
                     isLL = isLL && intersectionResult.empty();
                 }
             }
@@ -245,6 +509,7 @@ void fillFIRST(map<string, vector<string>>& grammar,
 {
     for (auto s : terminals)
         FIRST[s].insert(s);
+    FIRST[""].insert("");
     map<string, vector<vector<string>>>tokensGrammar = 
         tokensFromGrammar(grammar, terminals, notTerminals);
     bool flag = true;
@@ -479,8 +744,12 @@ void getLLFromMyGrammar()
     leftFactorisation(Grammar);
     Grammar["G"].pop_back();
     Grammar["L"].erase(Grammar["L"].begin());
-    clearLeftRecursion(Grammar);
-    leftFactorisation(Grammar);
+    Grammar["D"].push_back("*FD");
+    Grammar["C"].push_back("pi");
+    Grammar["F"].push_back("pi");
+    Grammar["T"].push_back("piD");
+    // clearLeftRecursion(Grammar);
+    // leftFactorisation(Grammar);
     fillFIRST(Grammar, Terminals, NotTerminals);
     fillFOLLOW(Grammar, Terminals, NotTerminals, StartNotTerminal);
     if (checkLL(Grammar, Terminals, NotTerminals))
@@ -489,10 +758,93 @@ void getLLFromMyGrammar()
         cout << "Fail!\n";
 }
 
+bool analyseExpression(string expression, string& startNotTerminal, 
+    vector<string>& terminals, vector<string>& notTerminals, unique_ptr<Node>& parseTree)
+{
+    expression += "$";
+    stack<Node*> expressionStack;
+    string endSymbol = "$";
+    unique_ptr<Node> endNode = make_unique<Node>(nullptr, endSymbol);
+    expressionStack.push(endNode.get());
+    expressionStack.push(parseTree.get());
+    int ip = 0;
+    string currentString = "";
+    while (expressionStack.top()->value() != "$")
+    {  
+        Node* parentNode = expressionStack.top();
+        string X = expressionStack.top()->value();
+        if (currentString.empty())
+        {
+            for (auto terminal : terminals)
+            {
+                if (expression.substr(ip, terminal.size()) == terminal)
+                {
+                    currentString = terminal;
+                    break;
+                }
+            }
+            if (expression.substr(ip) == "$")
+                currentString = "$";
+        }
+        if (X == currentString)
+        {
+            // cout << "equality: " << X << "\n";
+            expressionStack.pop();
+            ip += currentString.size();
+            currentString = "";
+        }
+        else {
+            bool flag = false;
+            for (auto notTerminal : notTerminals)
+            {
+                if (X == notTerminal)
+                {
+                    if (SyntaxAnalyseTable[X][currentString].empty())
+                        return false;
+                    else
+                    {
+                        flag = true;
+                        pair<string, vector<string>> p = SyntaxAnalyseTable[X][currentString][0];
+                        // cout << p.first << "-->";
+                        // for (auto c : p.second)
+                        //   cout << c;
+                        // cout << "\n";
+                        expressionStack.pop();
+                        vector<string>tmp = p.second;
+                        reverse(tmp.begin(), tmp.end());
+                        for (auto c : tmp)
+                        {
+                            if (!c.empty())
+                            {
+                                parentNode->addChild(c);
+                                expressionStack.push(parentNode->backChild());
+                            }
+                        }
+                        break;
+                    }
+                }
+            }
+            if (!flag)
+                return false;
+        }
+    }
+    return true;
+}
+
+bool comp(string& a, string& b)
+{
+    return a.size() < b.size();
+}
+
 int main()
 {
+    unique_ptr<Node> parseTree = make_unique<Node>(nullptr, StartNotTerminal);
     initGrammar();
     initVariables();
+    sort(Terminals.begin(), Terminals.end(), comp);
+    sort(UsedWords.begin(), UsedWords.end(), comp);
+    reverse(Terminals.begin(), Terminals.end());
+    reverse(UsedWords.begin(), UsedWords.end());
     map<string, vector<string>>tmpGrammar;
     // tmpGrammar["E"] = { "TA" };
     // tmpGrammar["A"] = { "+TA", "" };
@@ -501,11 +853,39 @@ int main()
     // tmpGrammar["F"] = { "(E)", "id" };
     // tmpGrammar["A"] = { "(A)A", "" };
     // tmpGrammar["B"] = { "BB", "(B)", "" };
+    tmpGrammar["S"] = { "iEtSA", "a" };
+    tmpGrammar["A"] = { "eS", "" };
+    tmpGrammar["E"] = { "b" };
     vector<string>notTerminals;
     vector<string>terminals;
-    notTerminals = {"E", "A", "T", "B", "F"};
-    terminals = { "+", "*", "(", ")", "id" };
+    notTerminals = { "A", "S", "E" };
+    terminals = { "i", "e", "t", "a", "b" };
+    // notTerminals = {"E", "A", "T", "B", "F"};
+    // terminals = { "+", "*", "(", ")", "id"};
     string startNotTerminal = "E";
+    // cout << checkLL(tmpGrammar, terminals, notTerminals);
     getLLFromMyGrammar();
-    // printGrammar(Grammar);
+    fillTable(Grammar, Terminals, NotTerminals);
+    printGrammar(Grammar);
+    // printTable();
+    // sin(x^3)cos(t^(x/15))2/tx+2t^3
+    // 15 / (7 - (1 + 1))3 - (2 + (1 + 1))15 / (7 - (200 + 1))3 - 
+    // (2 + (1 + 1))(15 / (7 - (1 + 1))3 - (2 + (1 + 1)) + 15 / (7 - (1 + 1))3 - (2 + (1 + 1)))
+    // 15/(7-(1+1))3-(2+(1+1))15/(7-(200+1))3-(2+(1+1))(15/(7-(1+1))3-(2+(1+1))+15/(7-(1+1))3-(2+(1+1)))
+    // x+t^(sin(5xt)cos(x^x^6))
+    // 1-txpi*cos(pit)
+    // 1+---sqrt(2)x
+    // -(-x--t+--(-2-5x))
+    // (1+t)+-(-x+-4t)
+    string expression = "pi/3xt^1/2x";
+    bool result = analyseExpression(expression, StartNotTerminal, 
+        Terminals, NotTerminals, parseTree);
+    cout << result << "\n";
+    parseTree->reverseTree();
+    parseTree->collectExpression();
+    // cout << parseTree->expression() << "\n";
+    parseTree->printTree(0);
+    // for (int i = 0; i < parseTree->childsSize(); i++)
+        // cout << parseTree->child(i)->value();
+    return 0;
 }
