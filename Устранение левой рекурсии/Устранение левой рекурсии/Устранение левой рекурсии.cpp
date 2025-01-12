@@ -7,20 +7,29 @@
 #include <algorithm>
 #include <stack>
 #include <memory>
+#include <iomanip>
+#define M_PI 3.14159265358979323846
+#define BRACKETS_ERROR -1
+#define LOG_ERROR -2
+#define SQRT_ERROR -3
+#define DIVISION_ZERO_ERROR -4
 
 using namespace std;
 map<string, vector<string> > Grammar;
-vector<string> Variables = {};
+vector<string> Digits = { "0", "1", "2", "3", "4", "5", "6", "7", "8", "9" };
+vector<string> Variables = {}; // это для преобразования грамматики в ll1. НЕ МАТЕМАТИЧЕСКИЕ ПЕРЕМЕННЫЕ!
+vector<string> MathVariables = { "x", "t" };
+vector<string> Constants = { "pi" };
 vector<string> Terminals = {
 "+", "-", "^", "*", "0", "1", "2", "3", "4", "5", "6", "7", "8", "9",
-"x", "t", "/", "ln(", "(", ")", "c", "s", "os(", "qrt(", 
-"in(", "g(", "exp(", "pi"};
-vector<string>UsedWords = { "+", "-", "^", "*", "/", "0", "1", "2", "3", "4", "5", "6", "7",
+"x", "t", "/", "ln(", "(", ")", "c", "s", "os(", "qrt(",
+"in(", "g(", "exp(", "pi" };
+vector<string> UsedWords = { "+", "-", "^", "*", "/", "0", "1", "2", "3", "4", "5", "6", "7",
 "8", "9", "pi", "x", "t", "cos", "sin", "tg", "ctg", "sqrt", "exp", "ln", "(", ")"
 };
-vector<string>Operators = { "+", "-", "^", "*", "/", "(", ")" };
-vector<string>Functions = { "cos", "sin", "tg", "ctg", "sqrt", "exp", "ln" };
-
+vector<string> Operators = { "+", "-", "^", "*", "/", "(", ")" };
+vector<string> Functions = { "cos", "sin", "tg", "ctg", "sqrt", "exp", "ln" };
+map<string, double> NodesCalculatedValuesMap;
 vector<string> NotTerminals = {
 "A", "B", "C", "D", "E", "F", "G", "H", "I",
 "J", "K", "L", "M", "N", "P", "Q", "T" };
@@ -28,10 +37,12 @@ string StartNotTerminal = "E";
 map<string, set<string>> FIRST;
 map<string, set<string>> FOLLOW;
 map<string, map<string, vector<pair<string, vector<string>>>>> SyntaxAnalyseTable;
+double xVALUE = 1;
+double tVALUE = 5;
 
-enum TokenType 
+enum TokenType
 {
-    Plus=0,
+    Plus = 0,
     Multiply,
     Minus,
     Division,
@@ -55,18 +66,45 @@ public:
     void printTree(int level);
     void reverseTree();
     int childsSize();
-    void collectExpression();
+    // void collectExpression();
     void collectTokens();
+    void calcExpression();
+    double calcValue();
     string expression();
 
 private:
     string m_value;
     Node* m_parent;
     vector<unique_ptr<Node>> m_childs;
-    double m_calcValue{0};
+    double m_calcValue{ 0 };
     vector<pair<string, bool>> m_tokens;
-    string m_expression{""};
+    vector<pair<string, bool>> m_postfixTokens;
+    string m_expression{ "" };
 };
+
+bool isConstant(string& value)
+{
+    bool flag = false;
+    for (auto myConst : Constants)
+        flag |= value == myConst;
+    return flag;
+}
+
+bool isMathVariable(string& value)
+{
+    bool flag = false;
+    for (auto mathVar : MathVariables)
+        flag |= value == mathVar;
+    return flag;
+}
+
+bool isDigit(string& value)
+{
+    bool flag = false;
+    for (auto digit : Digits)
+        flag |= value == digit;
+    return flag;
+}
 
 bool isFunction(string& value)
 {
@@ -84,6 +122,274 @@ bool isOperator(string& value)
     return flag;
 }
 
+void transferToPostfixTokens(vector<pair<string, bool>>& tokens, vector<pair<string, bool>>& postfixTokens)
+{
+    map<string, int> operatorsPriority =
+    { {"(", 0}, {"+", 1}, {"-", 1}, {"*", 2}, {"/", 2}, {"^", 3} };
+    stack<pair<string, bool>> algoStack;
+    int minusCount = 0;
+    // for (auto token : tokens)
+        // cout << token.first << " ";
+    // cout << "\n";
+    for (auto token : tokens)
+    {
+        if (token.first == "(" && token.second)
+            minusCount++;
+        else if (!isOperator(token.first))
+            token.second ^= static_cast<bool>(minusCount % 2);
+        if (!isOperator(token.first) && !isFunction(token.first))
+            postfixTokens.push_back(token);
+        else if (isFunction(token.first))
+            algoStack.push(token);
+        else if (isOperator(token.first) && token.first != "(" && token.first != ")")
+        {
+            while (!algoStack.empty()
+                && operatorsPriority[algoStack.top().first] >= operatorsPriority[token.first])
+            {
+                postfixTokens.push_back(algoStack.top());
+                algoStack.pop();
+            }
+            algoStack.push(token);
+        }
+        else if (token.first == "(")
+            algoStack.push(token);
+        else if (token.first == ")")
+        {
+            while (!algoStack.empty() && algoStack.top().first != "(")
+            {
+                postfixTokens.push_back(algoStack.top());
+                algoStack.pop();
+            }
+            if (algoStack.empty())
+            {
+                cout << "Error in brackets!";
+                exit(BRACKETS_ERROR);
+            }
+            if (algoStack.top().second)
+                minusCount--;
+            algoStack.pop();
+            if (!algoStack.empty() && isFunction(algoStack.top().first))
+            {
+                postfixTokens.push_back(algoStack.top());
+                algoStack.pop();
+            }
+        }
+        // for (auto pt : postfixTokens)
+        //    cout << pt.first << " ";
+        // cout << "\n";
+    }
+    while (!algoStack.empty() && algoStack.top().first != "(")
+    {
+        postfixTokens.push_back(algoStack.top());
+        algoStack.pop();
+    }
+    if (!algoStack.empty())
+    {
+        cout << "Error in brackets!";
+        exit(BRACKETS_ERROR);
+    }
+    // cout << "----------------------\n";
+}
+
+double calcPostfixTokensExpression(vector<pair<string, bool>>& postfixTokens)
+{
+    stack<double> calcStack;
+    for (auto pt : postfixTokens)
+    {
+        // cout << "fuck: " << pt.first << "\n";
+        if (!isOperator(pt.first) && !isFunction(pt.first))
+        {
+            double ans = 1;
+            int ip = 0;
+            int num = -1;
+            while (ip < pt.first.size())
+            {
+                bool flag = false;
+                if (pt.first[ip] == '$')
+                {
+                    string valueCode = "$";
+                    ip++;
+                    while (pt.first[ip] != '$')
+                    {
+                        valueCode += pt.first[ip];
+                        ip++;
+                    }
+                    valueCode += '$';
+                    // cout << valueCode << "\n";
+                    ans *= NodesCalculatedValuesMap[valueCode];
+                    flag = true;
+                    ip++;
+                }
+                else if (pt.first[ip] == 'x')
+                {
+                    ans *= xVALUE;
+                    ip++;
+                    flag = true;
+                }
+                else if (pt.first[ip] == 't')
+                {
+                    ans *= tVALUE;
+                    ip++;
+                    flag = true;
+                }
+                else if (ip + 2 <= pt.first.size() && pt.first.substr(ip, 2) == "pi")
+                {
+                    ans *= M_PI;
+                    ip += 2;
+                    flag = true;
+                }
+                else
+                {
+                    if (num < 0)
+                        num = pt.first[ip] - '0';
+                    else
+                        num = num * 10 + pt.first[ip] - '0';
+                    ip++;
+                }
+                if (flag && num > -1)
+                {
+                    ans *= num;
+                    num = -1;
+                }
+            }
+            if (num > -1)
+            {
+                ans *= num;
+                num = -1;
+            }
+            if (pt.second)
+                ans *= -1;
+            // cout << "ans: " << ans << "\n";
+            calcStack.push(ans);
+        }
+        else if (isOperator(pt.first))
+        {
+            double first = calcStack.top();
+            calcStack.pop();
+            double second = calcStack.top();
+            calcStack.pop();
+            if (pt.first == "+")
+                calcStack.push(second + first);
+            if (pt.first == "-")
+                calcStack.push(second - first);
+            if (pt.first == "*")
+                calcStack.push(first * second);
+            if (pt.first == "/")
+            {
+                if (abs(first - 0) < 1e-6)
+                {
+                    cout << "Division on zero. Error!";
+                    exit(DIVISION_ZERO_ERROR);
+                }
+                calcStack.push(second / first);
+
+            }
+            if (pt.first == "^")
+                calcStack.push(pow(second, first));
+        }
+        else {
+            double value = calcStack.top();
+            // cout << "-->" << value << "\n";
+            calcStack.pop();
+            // cout << "-->?" << value << "\n";
+            if (pt.first == "cos")
+            {
+                if (pt.second)
+                    calcStack.push(-cos(value));
+                else
+                    calcStack.push(cos(value));
+            }
+            if (pt.first == "sin")
+            {
+                // cout << value << " " << sin(value) << "\n";
+                if (pt.second)
+                    calcStack.push(-sin(value));
+                else
+                    calcStack.push(sin(value));
+            }
+            if (pt.first == "tg")
+            {
+                if (pt.second)
+                    calcStack.push(-tan(value));
+                else
+                    calcStack.push(tan(value));
+            }
+            if (pt.first == "ctg")
+            {
+                if (pt.second)
+                    calcStack.push(-tan(M_PI / 2 - value));
+                else
+                    calcStack.push(tan(M_PI / 2 - value));
+            }
+            if (pt.first == "ln")
+            {
+                if (value <= 0)
+                {
+                    cout << "Num in ln <= 0. Error!";
+                    exit(LOG_ERROR);
+                }
+                else
+                {
+                    if (pt.second)
+                        calcStack.push(-log(value));
+                    else
+                        calcStack.push(log(value));
+                }
+            }
+            if (pt.first == "sqrt")
+            {
+                if (value < 0)
+                {
+                    cout << "Num in sqrt < 0. Error!";
+                    exit(SQRT_ERROR);
+                }
+                else
+                {
+                    if (pt.second)
+                        calcStack.push(-sqrt(value));
+                    else
+                        calcStack.push(sqrt(value));
+                }
+            }
+            if (pt.first == "exp")
+                calcStack.push(exp(value));
+        }
+    }
+    return calcStack.top();
+}
+
+inline double Node::calcValue()
+{
+    return m_calcValue;
+}
+
+void Node::calcExpression()
+{
+    for (auto& child : m_childs)
+        child->calcExpression();
+    for (auto terminal : Terminals)
+    {
+        if (m_value == terminal)
+        {
+            m_expression = m_value;
+            return;
+        }
+    }
+    for (auto& child : m_childs)
+        m_expression += child->expression();
+    if (m_value == "E")
+    {
+        collectTokens();
+        /* for (auto t : m_tokens)
+            cout << t.first << " ";
+        cout << "\n";*/
+        transferToPostfixTokens(m_tokens, m_postfixTokens);
+        m_calcValue = calcPostfixTokensExpression(m_postfixTokens);
+        m_expression = "$" + to_string(NodesCalculatedValuesMap.size()) + "$";
+        NodesCalculatedValuesMap[m_expression] = m_calcValue;
+    }
+}
+
 void Node::collectTokens()
 {
     int ip = 0;
@@ -92,8 +398,41 @@ void Node::collectTokens()
     vector<pair<string, bool>> tmp;
     while (ip < m_expression.size())
     {
+        // cout << ip << " " << m_expression.size() << " " << m_expression << "\n";
+        string calcValueCode = "$";
+        if (m_expression[ip] == '$')
+        {
+            ip++;
+            while (m_expression[ip] != '$')
+            {
+                calcValueCode += m_expression[ip];
+                ip++;
+            }
+            calcValueCode += '$';
+            ip++;
+        }
+        if (calcValueCode.size() > 1 && minusFlag)
+        {
+            if (tmp.empty() || (tmp.back().first == "-" || tmp.back().first == "+"
+                || tmp.back().first == "*" || tmp.back().first == "/" ||
+                tmp.back().first == "("))
+                tmp.push_back({ calcValueCode, haveMinus });
+            else
+            {
+                if (haveMinus)
+                    tmp.push_back({ "-", false });
+                else
+                    tmp.push_back({ "+", false });
+                tmp.push_back({ calcValueCode, false });
+            }
+            haveMinus = false;
+            minusFlag = false;
+        }
+        else if (calcValueCode.size() > 1)
+            tmp.push_back({ calcValueCode, false });
         for (auto word : UsedWords)
         {
+            bool flag = false;
             if (ip + word.size() <= m_expression.size() && m_expression.substr(ip, word.size()) == word)
             {
                 if (word == "-")
@@ -101,12 +440,12 @@ void Node::collectTokens()
                     haveMinus ^= true;
                     minusFlag = true;
                 }
-                else if (minusFlag) 
+                else if (minusFlag)
                 {
                     if (tmp.empty() || (tmp.back().first == "-" || tmp.back().first == "+"
                         || tmp.back().first == "*" || tmp.back().first == "/" ||
                         tmp.back().first == "("))
-                        tmp.push_back({word, haveMinus});
+                        tmp.push_back({ word, haveMinus });
                     else
                     {
                         if (haveMinus)
@@ -118,7 +457,7 @@ void Node::collectTokens()
                     haveMinus = false;
                     minusFlag = false;
                 }
-                else 
+                else
                     tmp.push_back({ word, false });
                 ip += word.size();
                 break;
@@ -127,23 +466,44 @@ void Node::collectTokens()
     }
     for (auto p : tmp)
     {
-        if (!isOperator(p.first) && !isFunction(p.first))
+        // cout << p.first << "\n";
+        if (isDigit(p.first))
         {
-            if (!m_tokens.empty() && !isOperator(m_tokens.back().first) 
-                && !isFunction(m_tokens.back().first))
+            if (!m_tokens.empty() && m_tokens.back().first.back() >= '0'
+                && m_tokens.back().first.back() <= '9')
             {
                 m_tokens.back().first += p.first;
-                m_tokens.back().second = m_tokens.back().second || p.second;
+                m_tokens.back().second ^= p.second;
+            }
+            else if (!m_tokens.empty() && (!isOperator(m_tokens.back().first)
+                || m_tokens.back().first == ")"))
+            {
+                m_tokens.push_back({ "*", false });
+                m_tokens.push_back(p);
             }
             else
                 m_tokens.push_back(p);
         }
-        else 
+        else if (isMathVariable(p.first) || isFunction(p.first) || isConstant(p.first))
+        {
+            if (!m_tokens.empty() && (!isOperator(m_tokens.back().first)
+                || m_tokens.back().first == ")"))
+                m_tokens.push_back({ "*", false });
+            m_tokens.push_back(p);
+        }
+        else if (p.first == "(")
+        {
+            if (!m_tokens.empty() && (!isOperator(m_tokens.back().first)
+                && !isFunction(m_tokens.back().first) || m_tokens.back().first == ")"))
+                m_tokens.push_back({ "*", false });
+            m_tokens.push_back(p);
+        }
+        else
             m_tokens.push_back(p);
     }
 }
 
-void Node::collectExpression() 
+/* void Node::collectExpression()
 {
     for (auto terminal : Terminals)
     {
@@ -158,7 +518,7 @@ void Node::collectExpression()
         child->collectExpression();
         m_expression += child->expression();
     }
-};
+};*/
 
 inline string Node::expression()
 {
@@ -167,14 +527,17 @@ inline string Node::expression()
 
 void Node::printTree(int level)
 {
-    for (int i=0; i<level; i++)
+    for (int i = 0; i < level; i++)
         cout << "  ";
     cout << m_value << " " << m_expression << " ";
     if (m_value == "E")
     {
-        collectTokens();
+        // cout << m_calcValue << " ";
         for (auto t : m_tokens)
             cout << "{" << t.first << " " << t.second << "} ";
+        cout << "| ";
+        for (auto pt : m_postfixTokens)
+            cout << "{" << pt.first << " " << pt.second << "} ";
     }
     cout << "\n";
     for (auto& child : m_childs)
@@ -188,7 +551,7 @@ void Node::reverseTree()
         child->reverseTree();
 }
 
-int Node::childsSize()
+inline int Node::childsSize()
 {
     return m_childs.size();
 }
@@ -437,7 +800,7 @@ void printTable()
 bool checkLL(map<string, vector<string>>& grammar, vector<string>& terminals,
     vector<string>& notTerminals)
 {
-    map<string, vector<vector<string>>>tokensGrammar = 
+    map<string, vector<vector<string>>>tokensGrammar =
         tokensFromGrammar(grammar, terminals, notTerminals);
     bool isLL = true;
     for (auto p : tokensGrammar)
@@ -504,13 +867,13 @@ void fillFOLLOW(map<string, vector<string>>& grammar, vector<string>& terminals,
     }
 }
 
-void fillFIRST(map<string, vector<string>>& grammar, 
+void fillFIRST(map<string, vector<string>>& grammar,
     vector<string>& terminals, vector<string>& notTerminals)
 {
     for (auto s : terminals)
         FIRST[s].insert(s);
     FIRST[""].insert("");
-    map<string, vector<vector<string>>>tokensGrammar = 
+    map<string, vector<vector<string>>>tokensGrammar =
         tokensFromGrammar(grammar, terminals, notTerminals);
     bool flag = true;
     while (flag)
@@ -534,7 +897,7 @@ void fillFIRST(map<string, vector<string>>& grammar,
                     }
                 }
                 haveEpsilon = true;
-                for (int i=0; i<tokens.size() && haveEpsilon; i++)
+                for (int i = 0; i < tokens.size() && haveEpsilon; i++)
                     haveEpsilon = FIRST[tokens[i]].find("") != FIRST[tokens[i]].end();
                 if (haveEpsilon)
                     FIRST[notTerminal].insert("");
@@ -547,10 +910,10 @@ void fillFIRST(map<string, vector<string>>& grammar,
 void initGrammar()
 {
     Grammar["F"] = { "C", "N", "(E)", "-F", "sqrt(E)",
-        "sin(E)", "cos(E)", "tg(E)", "ctg(E)", "-F", "ln(E)", "exp(E)"};
+        "sin(E)", "cos(E)", "tg(E)", "ctg(E)", "-F", "ln(E)", "exp(E)" };
     Grammar["T"] = { "F", "TF", "T/F" };
     Grammar["E"] = { "T", "E+T", "E-T", "E^T" };
-    Grammar["C"] = { "NC", "x", "t"};
+    Grammar["C"] = { "NC", "x", "t" };
     Grammar["N"] = { "0", "1", "2", "3", "4", "5", "6", "7", "8", "9" };
     for (char i = '0'; i <= '9'; i++)
     {
@@ -565,7 +928,7 @@ void printGrammar(map<string, vector<string>>& grammar)
     for (auto elem : grammar)
     {
         cout << elem.first << "-->";
-        for (int i=0; i<elem.second.size() - 1; i++)
+        for (int i = 0; i < elem.second.size() - 1; i++)
             cout << elem.second[i] << "|";
         cout << elem.second.back() << "\n";
     }
@@ -606,7 +969,7 @@ void deleteDirectRecursion(string recursionVariable, map<string, vector<string>>
         if (!flag) beforeVar.push_back(elem);
         else afterVar.push_back(elem.substr(min(elem.size(), recursionVariable.size())));
     }
-    if (afterVar.empty()) 
+    if (afterVar.empty())
         return;
     for (auto var : Variables)
     {
@@ -630,13 +993,13 @@ void clearLeftRecursion(map<string, vector<string>>& grammar)
 {
     vector<string> variables(0);
     for (auto p : grammar) variables.push_back(p.first);
-    for (int i=0; i<variables.size(); i++)
+    for (int i = 0; i < variables.size(); i++)
     {
-        for (int j = 0; j < i; j++) 
+        for (int j = 0; j < i; j++)
         {
             int count = 0;
             vector<string>newGrammarVector(0);
-            for (int k=0; k < grammar[variables[i]].size(); k++)
+            for (int k = 0; k < grammar[variables[i]].size(); k++)
             {
                 string elem = grammar[variables[i]][k];
                 if (elem.empty())
@@ -758,7 +1121,7 @@ void getLLFromMyGrammar()
         cout << "Fail!\n";
 }
 
-bool analyseExpression(string expression, string& startNotTerminal, 
+bool analyseExpression(string expression, string& startNotTerminal,
     vector<string>& terminals, vector<string>& notTerminals, unique_ptr<Node>& parseTree)
 {
     expression += "$";
@@ -770,7 +1133,7 @@ bool analyseExpression(string expression, string& startNotTerminal,
     int ip = 0;
     string currentString = "";
     while (expressionStack.top()->value() != "$")
-    {  
+    {
         Node* parentNode = expressionStack.top();
         string X = expressionStack.top()->value();
         if (currentString.empty())
@@ -828,7 +1191,7 @@ bool analyseExpression(string expression, string& startNotTerminal,
                 return false;
         }
     }
-    return true;
+    return true && expression[ip] == '$';
 }
 
 bool comp(string& a, string& b)
@@ -877,15 +1240,38 @@ int main()
     // 1+---sqrt(2)x
     // -(-x--t+--(-2-5x))
     // (1+t)+-(-x+-4t)
-    string expression = "pi/3xt^1/2x";
-    bool result = analyseExpression(expression, StartNotTerminal, 
+    // pi/3xt^1/2x
+    // ---ln(x)+-cos(x)--sin(x)
+    // (((x)pi/(3xt)^1/2x))
+    // -(---x--3*---2t)
+    // -cos(-2x)sin(-2x)-(---4-7)xtx
+    // 15/(7-(1+1))*3-(2+(1+1))*15/(7-(200+1))*3-(2+(1+1))*(15/(7-(1+1))*3-(2+(1+1))+15/(7-(1+1))*-3-(2+(1+1)))
+    // x+t^(sin(5*x*t)*cos(x^x^6))
+    // -2tln(exp(1))-(-cos(25xt)888+-sin(1111)+13exp(6))
+    // ln(18)/ln(2)/pi*sqrt((11/100)^(-3)*100/2)
+    string expression =
+        "1-txpi*cos(pit)";
+    // ln(18)/ln(2)/pi*sqrt((11/100)^(-3)*100/2)
+    // (-x27)(--x/5)(---t)
+    // 200t^3
+    double x = xVALUE;
+    double t = tVALUE;
+    cout << fixed << setprecision(10) << "right: " << 1 - t * x * M_PI * cos(M_PI * t) << "\n";
+    bool result = analyseExpression(expression, StartNotTerminal,
         Terminals, NotTerminals, parseTree);
-    cout << result << "\n";
-    parseTree->reverseTree();
-    parseTree->collectExpression();
-    // cout << parseTree->expression() << "\n";
-    parseTree->printTree(0);
-    // for (int i = 0; i < parseTree->childsSize(); i++)
-        // cout << parseTree->child(i)->value();
+    cout << result << " " << sqrt(751) << "\n";
+    if (result)
+    {
+        parseTree->reverseTree();
+        // parseTree->collectExpression();
+        parseTree->calcExpression();
+        // cout << parseTree->expression() << "\n";
+        parseTree->printTree(0);
+        cout << fixed << setprecision(10) << "calculate value:" << parseTree->calcValue() << "\n";
+        for (auto p : NodesCalculatedValuesMap)
+            cout << p.first << " " << p.second << '\n';
+        // for (int i = 0; i < parseTree->childsSize(); i++)
+            // cout << parseTree->child(i)->value();
+    }
     return 0;
 }
