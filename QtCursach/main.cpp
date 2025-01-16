@@ -1,4 +1,4 @@
-﻿#include <iostream>
+#include <iostream>
 #include <vector>
 #include <map>
 #include <string>
@@ -37,8 +37,8 @@ string StartNotTerminal = "E";
 map<string, set<string>> FIRST;
 map<string, set<string>> FOLLOW;
 map<string, map<string, vector<pair<string, vector<string>>>>> SyntaxAnalyseTable;
-double xVALUE = 1;
-double tVALUE = 5;
+double xVALUE = -10;
+double tVALUE = 10;
 
 enum TokenType
 {
@@ -71,6 +71,7 @@ public:
     void calcExpression();
     double calcValue();
     string expression();
+    void clear();
 
 private:
     string m_value;
@@ -363,6 +364,14 @@ inline double Node::calcValue()
     return m_calcValue;
 }
 
+void Node::clear()
+{
+    m_expression = "";
+    m_calcValue = 0;
+    m_tokens.clear();
+    m_postfixTokens.clear();
+}
+
 void Node::calcExpression()
 {
     for (auto& child : m_childs)
@@ -376,7 +385,10 @@ void Node::calcExpression()
         }
     }
     for (auto& child : m_childs)
+    {
         m_expression += child->expression();
+        child->clear();
+    }
     if (m_value == "E")
     {
         collectTokens();
@@ -1199,6 +1211,73 @@ bool comp(string& a, string& b)
     return a.size() < b.size();
 }
 
+// sin(x^3)cos(t^(x/15))2/tx+2t^3
+double executeExpression1(double x, double t)
+{
+    return sin(pow(x, 3)) * cos(pow(t, (x/15))) * 2 / t * x + 2 * pow(t, 3);
+}
+// 2xt
+double executeExpression2(double x, double t)
+{
+    return 2 * x * t;
+}
+
+class Tester
+{
+public:
+    Tester();
+    void testing();
+    void addTest(string expression,
+        double(*executeExpression)(double, double));
+    void addMathVariablesValuesForTest(
+        string testExpression, double x, double t);
+private:
+    map<string, double(*)(double, double)> m_tests;
+    // 0 x
+    // 1 t
+    map<string, vector<pair<double, double>>> m_mathVariablesValues;
+};
+
+Tester::Tester()
+{
+    addTest("2xt", executeExpression2);
+    // addTest("sin(x^3)cos(t^(x/15))2/tx+2t^3", executeExpression1);
+};
+
+inline void Tester::addTest(string expression, double(*executeExpression)(double, double))
+{
+    m_tests[expression] = executeExpression;
+}
+
+inline void Tester::addMathVariablesValuesForTest(
+    string testExpression, double x, double t)
+{
+    if (m_mathVariablesValues.find(testExpression)
+        != m_mathVariablesValues.end())
+        m_mathVariablesValues[testExpression].push_back({x, t});
+}
+
+void Tester::testing()
+{
+    int testNumber = 0;
+    unique_ptr<Node> parseTree = make_unique<Node>(nullptr, StartNotTerminal);
+    for (auto test : m_tests)
+    {
+        int acceptedTestsCount = 0;
+        int failedTestsCount = 0;
+        cout << "----------------------------------------------------------\n";
+        cout << "Test" << testNumber << ":\n";
+        cout << "expression: " << test.first << "\n";
+        for (auto data : m_mathVariablesValues[test.first])
+        {
+            double compilerAnswer = test.second(data.first, data.second);
+            cout << "compilerAnswer: " << compilerAnswer << "\n";
+        }
+        cout << "----------------------------------------------------------\n";
+        testNumber++;
+    }
+}
+
 int main()
 {
     unique_ptr<Node> parseTree = make_unique<Node>(nullptr, StartNotTerminal);
@@ -1229,11 +1308,9 @@ int main()
     // cout << checkLL(tmpGrammar, terminals, notTerminals);
     getLLFromMyGrammar();
     fillTable(Grammar, Terminals, NotTerminals);
-    printGrammar(Grammar);
+    // printGrammar(Grammar);
     // printTable();
-    // sin(x^3)cos(t^(x/15))2/tx+2t^3
-    // 15 / (7 - (1 + 1))3 - (2 + (1 + 1))15 / (7 - (200 + 1))3 - 
-    // (2 + (1 + 1))(15 / (7 - (1 + 1))3 - (2 + (1 + 1)) + 15 / (7 - (1 + 1))3 - (2 + (1 + 1)))
+    // sin(x^3)cos(t^(x/15))2/tx+2t^3 +
     // 15/(7-(1+1))3-(2+(1+1))15/(7-(200+1))3-(2+(1+1))(15/(7-(1+1))3-(2+(1+1))+15/(7-(1+1))3-(2+(1+1)))
     // x+t^(sin(5xt)cos(x^x^6))
     // 1-txpi*cos(pit)
@@ -1250,26 +1327,30 @@ int main()
     // -2tln(exp(1))-(-cos(25xt)888+-sin(1111)+13exp(6))
     // ln(18)/ln(2)/pi*sqrt((11/100)^(-3)*100/2)
     string expression =
-        "1-txpi*cos(pit)";
+        "/(7-(1+1))3-(2+(1+1))15/(7-(200+1))3-(2+(1+1))(15/(7-(1+1))3-(2+(1+1))+15/(7-(1+1))3-(2+(1+1)))";
     // ln(18)/ln(2)/pi*sqrt((11/100)^(-3)*100/2)
     // (-x27)(--x/5)(---t)
     // 200t^3
+    Tester tester;
+    tester.testing();
     double x = xVALUE;
     double t = tVALUE;
-    cout << fixed << setprecision(10) << "right: " << 1 - t * x * M_PI * cos(M_PI * t) << "\n";
     bool result = analyseExpression(expression, StartNotTerminal,
         Terminals, NotTerminals, parseTree);
-    cout << result << " " << sqrt(751) << "\n";
+    cout << "Result of analyse: " << result << "\n";
     if (result)
     {
+        cout << fixed << setprecision(10) << "rightAnswer: "
+            << sin(pow(x, 3)) * cos(pow(t, (x/15))) * 2/t*x+2*pow(t, 3)
+            << "\n";
         parseTree->reverseTree();
         // parseTree->collectExpression();
         parseTree->calcExpression();
         // cout << parseTree->expression() << "\n";
-        parseTree->printTree(0);
+        // parseTree->printTree(0);
         cout << fixed << setprecision(10) << "calculate value:" << parseTree->calcValue() << "\n";
-        for (auto p : NodesCalculatedValuesMap)
-            cout << p.first << " " << p.second << '\n';
+        // for (auto p : NodesCalculatedValuesMap)
+        //    cout << p.first << " " << p.second << '\n';
         // for (int i = 0; i < parseTree->childsSize(); i++)
             // cout << parseTree->child(i)->value();
     }
