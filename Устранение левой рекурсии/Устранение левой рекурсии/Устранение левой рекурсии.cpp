@@ -37,8 +37,8 @@ string StartNotTerminal = "E";
 map<string, set<string>> FIRST;
 map<string, set<string>> FOLLOW;
 map<string, map<string, vector<pair<string, vector<string>>>>> SyntaxAnalyseTable;
-double xVALUE = 1;
-double tVALUE = 5;
+double xVALUE = 4/3;
+double tVALUE = 3;
 
 enum TokenType
 {
@@ -1249,14 +1249,15 @@ int main()
     // x+t^(sin(5*x*t)*cos(x^x^6))
     // -2tln(exp(1))-(-cos(25xt)888+-sin(1111)+13exp(6))
     // ln(18)/ln(2)/pi*sqrt((11/100)^(-3)*100/2)
+    // x^(3t^(-2))
     string expression =
-        "1-txpi*cos(pit)";
+        "x^3+x^2-5x-4";
     // ln(18)/ln(2)/pi*sqrt((11/100)^(-3)*100/2)
     // (-x27)(--x/5)(---t)
     // 200t^3
     double x = xVALUE;
     double t = tVALUE;
-    cout << fixed << setprecision(10) << "right: " << 1 - t * x * M_PI * cos(M_PI * t) << "\n";
+    cout << fixed << setprecision(10) << "right: " << pow(x, 3)+pow(x,2)-5*x-4 << "\n";
     bool result = analyseExpression(expression, StartNotTerminal,
         Terminals, NotTerminals, parseTree);
     cout << result << " " << sqrt(751) << "\n";
