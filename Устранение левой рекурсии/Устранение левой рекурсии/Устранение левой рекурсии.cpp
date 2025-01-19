@@ -8,11 +8,28 @@
 #include <stack>
 #include <memory>
 #include <iomanip>
+#include <complex>
 #define M_PI 3.14159265358979323846
 #define BRACKETS_ERROR -1
 #define LOG_ERROR -2
 #define SQRT_ERROR -3
 #define DIVISION_ZERO_ERROR -4
+
+// ВАЖНОЕ
+// Компилятор не умеет брать корни из отрицательных чисел, когда они получаются не комплексные
+// Ну, пиздец это как бы
+// Надо исправлять каким-то образом
+// pow(-27, 1.0 / 3.0) --> -nan(ind), а нужно -3
+// pow(-8, 1.0 / 3.0) --> -nan(ind), а нужно -2
+// pow(-32, 0.2) --> -nan(ind), а нужно -2
+// pow(-23, 7.0/15.0) --> -nan(ind), а нужно -4.31989300289223
+// "pow(-27.0, 1.0 / 3.0)=" << pow(-27.0, 1.0 / 3.0) << ", а правильный ответ -3\n";
+// "pow(-8.0, 1.0 / 3.0)=" << pow(-8.0, 1.0 / 3.0) << ", а правильный ответ -2\n";
+// "pow(-32.0, 0.2)=" << pow(-32.0, 0.2) << ", а правильный ответ -2\n";
+// "pow(-23.0, 7.0 / 15.0)=" << pow(-23.0, 7.0 / 15.0) << ", а правильный ответ -4.31989300289223\n";
+// "pow(-8.0, 5.0 / 3.0)=" << pow(-8.0, 5.0 / 3.0) << ", а правильный ответ -32\n";
+// "pow(-32.0, 3.0 / 5.0)=" << pow(-32.0, 3.0 / 5.0) << ", а правильный ответ -8\n";
+
 
 using namespace std;
 map<string, vector<string> > Grammar;
@@ -37,8 +54,8 @@ string StartNotTerminal = "E";
 map<string, set<string>> FIRST;
 map<string, set<string>> FOLLOW;
 map<string, map<string, vector<pair<string, vector<string>>>>> SyntaxAnalyseTable;
-double xVALUE = 4/3;
-double tVALUE = 3;
+double xVALUE = -10;
+double tVALUE = 10;
 
 enum TokenType
 {
@@ -71,6 +88,7 @@ public:
     void calcExpression();
     double calcValue();
     string expression();
+    void clear();
 
 private:
     string m_value;
@@ -276,7 +294,7 @@ double calcPostfixTokensExpression(vector<pair<string, bool>>& postfixTokens)
                 calcStack.push(first * second);
             if (pt.first == "/")
             {
-                if (abs(first - 0) < 1e-6)
+                if (abs(first) < 1e-6)
                 {
                     cout << "Division on zero. Error!";
                     exit(DIVISION_ZERO_ERROR);
@@ -363,6 +381,14 @@ inline double Node::calcValue()
     return m_calcValue;
 }
 
+void Node::clear()
+{
+    m_expression = "";
+    m_calcValue = 0;
+    m_tokens.clear();
+    m_postfixTokens.clear();
+}
+
 void Node::calcExpression()
 {
     for (auto& child : m_childs)
@@ -376,7 +402,10 @@ void Node::calcExpression()
         }
     }
     for (auto& child : m_childs)
+    {
         m_expression += child->expression();
+        child->clear();
+    }
     if (m_value == "E")
     {
         collectTokens();
@@ -1199,8 +1228,267 @@ bool comp(string& a, string& b)
     return a.size() < b.size();
 }
 
+class Tester
+{
+public:
+    Tester();
+    void testing();
+    void addTest(string expression, double(*executeExpression)(double, double), 
+        vector<pair<double, double>> mathVariablesValues = {});
+    void addMathVariablesValuesForTest(
+        string testExpression, double x, double t);
+private:
+    map<string, double(*)(double, double)> m_tests;
+    // first -> x
+    // second -> t
+    map<string, vector<pair<double, double>>> m_mathVariablesValues;
+};
+
+// sin(x^3)cos(t^(x/15))2/tx+2t^3
+double executeExpression1(double x, double t)
+{
+    return sin(pow(x, 3)) * cos(pow(t, (x / 15))) * 2 / t * x + 2 * pow(t, 3);
+}
+
+// 2xt
+double executeExpression2(double x, double t)
+{
+    return 2 * x * t;
+}
+
+// t^(x/15)
+double executeExpression3(double x, double t)
+{
+    return pow(t, (x / 15));
+}
+
+// 15/(7-(1+1))3-(2+(1+1))15/(7-(200+1))3-(2+(1+1))(15/(7-(1+1))3-(2+(1+1))+15/(7-(1+1))3-(2+(1+1)))
+// ответ посчитан на питоне -30.072164948453608
+double executeExpression4(double x, double t)
+{
+    return -30.072164948453608;
+}
+
+// x+t^(sin(5xt)cos(x^x^6))
+double executeExpression5(double x, double t)
+{
+    return x + pow(t, sin(5*x*t) * cos(pow(pow(x, x), 6)));
+}
+
+// 1-txpi*cos(pit)
+double executeExpression6(double x, double t)
+{
+    return 1 - t * x * M_PI * cos(M_PI * t);
+}
+
+// 1+---sqrt(2)x
+double executeExpression7(double x, double t)
+{
+    return 1 + -(-(-sqrt(2))) * x;
+}
+
+// -(-x--t+--(-2-5x))
+double executeExpression8(double x, double t)
+{
+    return -(-x - (-t) + -(-(-2 - 5 * x)));
+}
+
+// (1+t)+-(-x+-4t)
+double executeExpression9(double x, double t)
+{
+    return (1 + t) + -(-x + -4 * t);
+}
+
+// pi/3xt^1/2x
+double executeExpression10(double x, double t)
+{
+    return M_PI / 3 * x * t / 2 * x;
+}
+
+// ---ln(x)+-cos(x)--sin(x)
+double executeExpression11(double x, double t)
+{
+    return -(-(-log(x))) + -cos(x) - (-sin(x));
+}
+
+// (((x)pi/(3xt)^1/2x))
+double executeExpression12(double x, double t)
+{
+    return ((x) * M_PI / (3 * x * t) / 2 * x);
+}
+
+// -(---x--3*---2t)
+double executeExpression13(double x, double t)
+{
+    return -(-(-(-x)) - -3*-(-(-2*t)));
+}
+
+// -cos(-2x)sin(-2x)-(---4-7)xtx
+double executeExpression14(double x, double t)
+{
+    return -cos(-2 * x) * sin(-2 * x) - (-(-(-4)) - 7) * x * t * x;
+}
+
+// -2tln(exp(1))-(-cos(25xt)888+-sin(1111)+13exp(6))
+double executeExpression15(double x, double t)
+{
+    return -2 * t * log(exp(1)) - (-cos(25 * x * t) * 888 + -sin(1111) + 13 * exp(6));
+}
+
+// ln(18)/ln(2)/pi*sqrt((11/100)^(-3)*100/2)
+double executeExpression16(double x, double t)
+{
+    return log(18)/log(2)/M_PI*sqrt(pow((11.0 / 100.0), -3) * 100 / 2);
+}
+
+// (-x27)(--x/5)(---t)
+double executeExpression17(double x, double t)
+{
+    return (-x*27)*(-(-x)/5)*-(-(-t));
+}
+
+// 200t^3
+double executeExpression18(double x, double t)
+{
+    return 200*pow(t, 3);
+}
+
+Tester::Tester()
+{
+    addTest("2xt", executeExpression2, { {1, 0}, {-2, 7}, { 33, -11 } });
+    addTest("sin(x^3)cos(t^(x/15))2/tx+2t^3", executeExpression1,
+        { {M_PI / 2, M_PI / 8}, {-20 * M_PI / 2, M_PI + 10 / 8}, {35, 26}, { 7, 23 } });
+    addTest("t^(x/15)", executeExpression3, { {7, 23} });
+    addTest("15/(7-(1+1))3-(2+(1+1))15/(7-(200+1))3-(2+(1+1))(15/(7-(1+1))3-(2+(1+1))+15/(7-(1+1))3-(2+(1+1)))",
+        executeExpression4, { {1, 1}, {-2, -3} });
+    addTest("x+t^(sin(5xt)cos(x^x^6))",
+        executeExpression5, { {(M_PI + 236) / 321.0, M_PI * M_PI * M_PI / 25.0}, 
+        {25, 0}, {11, 3 * M_PI} });
+    addTest("1-txpi*cos(pit)",
+        executeExpression6, { {(M_PI + 236) / 321.0, M_PI * M_PI * M_PI / 25.0},
+        {17, -10}, {-11, -3 * M_PI} });
+    addTest("1+---sqrt(2)x", executeExpression7, { {-62.354, 727.734},
+        {-733.311, -966.223}, {-126.504, 213.409} });
+    addTest("-(-x--t+--(-2-5x))", executeExpression8, { {530.9, -87.564},
+        {-171.098, 560.32}, {32.736, -351.14} });
+    addTest("(1+t)+-(-x+-4t)", executeExpression9, { {828.457, 488.669},
+        {56.466, -983.201}, {-350.11, 271.453} });
+    addTest("pi/3xt^1/2x", executeExpression10, { {386.617, 156.115},
+        {319.497, 387.655}, {-897.75, 871.51} });
+    addTest("---ln(x)+-cos(x)--sin(x)", executeExpression11, { {771.174, 670.509},
+        {225.049, -818.449}, {368.900, -797.374} });
+    addTest("(((x)pi/(3xt)^1/2x))", executeExpression12, { {771.174, 670.509},
+        {225.049, -818.449}, {368.900, -797.374} });
+    addTest("-(---x--3*---2t)", executeExpression13, { {771.174, 670.509},
+        {225.049, -818.449}, {368.900, -797.374} });
+    addTest("-cos(-2x)sin(-2x)-(---4-7)xtx", executeExpression14, { {771.174, 670.509},
+        {225.049, -818.449}, {368.900, -797.374} });
+    addTest("-2tln(exp(1))-(-cos(25xt)888+-sin(1111)+13exp(6))", executeExpression15, { {771.174, 670.509},
+        {225.049, -818.449}, {368.900, -797.374} });
+    addTest("ln(18)/ln(2)/pi*sqrt((11/100)^(-3)*100/2)", executeExpression16, { {0, 0} });
+    addTest("(-x27)(--x/5)(---t)", executeExpression17, { {771.174, 670.509},
+        {225.049, -818.449}, {368.900, -797.374} });
+    addTest("200t^3", executeExpression18, { {2.392, 7.013},
+        {1.725, 9.846}, {12.003, -11.334} });
+};
+
+inline void Tester::addTest(string expression, double(*executeExpression)(double, double), 
+    vector<pair<double, double>> mathVariablesValues)
+{
+    m_tests[expression] = executeExpression;
+    m_mathVariablesValues[expression] = {};
+    for (auto values : mathVariablesValues)
+        addMathVariablesValuesForTest(expression, values.first, values.second);
+}
+
+inline void Tester::addMathVariablesValuesForTest(
+    string testExpression, double x, double t)
+{
+    if (m_mathVariablesValues.find(testExpression)
+        != m_mathVariablesValues.end())
+        m_mathVariablesValues[testExpression].push_back({ x, t });
+}
+
+void Tester::testing()
+{
+    int testNumber = 0;
+    unique_ptr<Node> parseTree = make_unique<Node>(nullptr, StartNotTerminal);
+    for (auto test : m_tests)
+    {
+        int acceptedTestsCount = 0;
+        int failedTestsCount = 0;
+        unique_ptr<Node> parseTree = make_unique<Node>(nullptr, StartNotTerminal);
+        bool resultOfAnalyseExpression = analyseExpression(test.first, StartNotTerminal,
+            Terminals, NotTerminals, parseTree);
+        parseTree->reverseTree();
+        vector<pair<double, double>> testResults;
+        if (resultOfAnalyseExpression)
+        {
+            for (auto data : m_mathVariablesValues[test.first])
+            {
+                NodesCalculatedValuesMap.clear();
+                // cout << "size: " << NodesCalculatedValuesMap.size() << "\n";
+                xVALUE = data.first;
+                tVALUE = data.second;
+                double compilerAnswer = test.second(data.first, data.second);
+                parseTree->calcExpression();
+                // parseTree->printTree(0);
+                double myCalculatorAnswer = parseTree->calcValue();
+                parseTree->clear();
+                testResults.push_back({ compilerAnswer, myCalculatorAnswer });
+            }
+            int dataNumber = 0;
+            int acceptedTestsCount = 0;
+            bool flag = true;
+            for (auto data : m_mathVariablesValues[test.first])
+            {
+                if (abs(testResults[dataNumber].first - testResults[dataNumber].second) < 1e-6)
+                    acceptedTestsCount++;
+                else
+                {
+                    if (flag)
+                    {
+                        cout << "----------------------------------------------------------\n";
+                        cout << "Test" << testNumber << ":\n";
+                        cout << "expression: " << test.first << "\n";
+                        flag = false;
+                    }
+                    cout << "\nx=" << data.first << " t=" << data.second << "\n";
+                    cout << "compilerAnswer: " << testResults[dataNumber].first << "\n";
+                    cout << "myCalculatorAnswer: " << testResults[dataNumber].second << "\n";
+                    cout << "Verdict: Failed\n";
+                }
+                dataNumber++;
+            }
+            if (acceptedTestsCount < m_mathVariablesValues[test.first].size())
+            {
+                cout << "\nResult of testing: " << acceptedTestsCount
+                    << "/" << m_mathVariablesValues[test.first].size() << "\n";
+                cout << "CommonVerdict: ";
+                if (acceptedTestsCount == m_mathVariablesValues[test.first].size())
+                    cout << "Accepted";
+                else
+                    cout << "Failed";
+                cout << "\n";
+                cout << "----------------------------------------------------------\n";
+            }
+        }
+        else
+        {
+            cout << "----------------------------------------------------------\n";
+            cout << "Test" << testNumber << ":\n";
+            cout << "expression: " << test.first << "\n";
+            cout << "Данное выражение невозможно посчитать, \n"
+                "так как в нем нарушены правила записи математических выраженией\n";
+            cout << "----------------------------------------------------------\n";
+        }
+        testNumber++;
+    }
+}
+
 int main()
 {
+    setlocale(LC_ALL, "Russian");
     unique_ptr<Node> parseTree = make_unique<Node>(nullptr, StartNotTerminal);
     initGrammar();
     initVariables();
@@ -1209,70 +1497,9 @@ int main()
     reverse(Terminals.begin(), Terminals.end());
     reverse(UsedWords.begin(), UsedWords.end());
     map<string, vector<string>>tmpGrammar;
-    // tmpGrammar["E"] = { "TA" };
-    // tmpGrammar["A"] = { "+TA", "" };
-    // tmpGrammar["T"] = { "FB" };
-    // tmpGrammar["B"] = { "*FB", "" };
-    // tmpGrammar["F"] = { "(E)", "id" };
-    // tmpGrammar["A"] = { "(A)A", "" };
-    // tmpGrammar["B"] = { "BB", "(B)", "" };
-    tmpGrammar["S"] = { "iEtSA", "a" };
-    tmpGrammar["A"] = { "eS", "" };
-    tmpGrammar["E"] = { "b" };
-    vector<string>notTerminals;
-    vector<string>terminals;
-    notTerminals = { "A", "S", "E" };
-    terminals = { "i", "e", "t", "a", "b" };
-    // notTerminals = {"E", "A", "T", "B", "F"};
-    // terminals = { "+", "*", "(", ")", "id"};
-    string startNotTerminal = "E";
-    // cout << checkLL(tmpGrammar, terminals, notTerminals);
     getLLFromMyGrammar();
     fillTable(Grammar, Terminals, NotTerminals);
-    printGrammar(Grammar);
-    // printTable();
-    // sin(x^3)cos(t^(x/15))2/tx+2t^3
-    // 15 / (7 - (1 + 1))3 - (2 + (1 + 1))15 / (7 - (200 + 1))3 - 
-    // (2 + (1 + 1))(15 / (7 - (1 + 1))3 - (2 + (1 + 1)) + 15 / (7 - (1 + 1))3 - (2 + (1 + 1)))
-    // 15/(7-(1+1))3-(2+(1+1))15/(7-(200+1))3-(2+(1+1))(15/(7-(1+1))3-(2+(1+1))+15/(7-(1+1))3-(2+(1+1)))
-    // x+t^(sin(5xt)cos(x^x^6))
-    // 1-txpi*cos(pit)
-    // 1+---sqrt(2)x
-    // -(-x--t+--(-2-5x))
-    // (1+t)+-(-x+-4t)
-    // pi/3xt^1/2x
-    // ---ln(x)+-cos(x)--sin(x)
-    // (((x)pi/(3xt)^1/2x))
-    // -(---x--3*---2t)
-    // -cos(-2x)sin(-2x)-(---4-7)xtx
-    // 15/(7-(1+1))*3-(2+(1+1))*15/(7-(200+1))*3-(2+(1+1))*(15/(7-(1+1))*3-(2+(1+1))+15/(7-(1+1))*-3-(2+(1+1)))
-    // x+t^(sin(5*x*t)*cos(x^x^6))
-    // -2tln(exp(1))-(-cos(25xt)888+-sin(1111)+13exp(6))
-    // ln(18)/ln(2)/pi*sqrt((11/100)^(-3)*100/2)
-    // x^(3t^(-2))
-    string expression =
-        "x^3+x^2-5x-4";
-    // ln(18)/ln(2)/pi*sqrt((11/100)^(-3)*100/2)
-    // (-x27)(--x/5)(---t)
-    // 200t^3
-    double x = xVALUE;
-    double t = tVALUE;
-    cout << fixed << setprecision(10) << "right: " << pow(x, 3)+pow(x,2)-5*x-4 << "\n";
-    bool result = analyseExpression(expression, StartNotTerminal,
-        Terminals, NotTerminals, parseTree);
-    cout << result << " " << sqrt(751) << "\n";
-    if (result)
-    {
-        parseTree->reverseTree();
-        // parseTree->collectExpression();
-        parseTree->calcExpression();
-        // cout << parseTree->expression() << "\n";
-        parseTree->printTree(0);
-        cout << fixed << setprecision(10) << "calculate value:" << parseTree->calcValue() << "\n";
-        for (auto p : NodesCalculatedValuesMap)
-            cout << p.first << " " << p.second << '\n';
-        // for (int i = 0; i < parseTree->childsSize(); i++)
-            // cout << parseTree->child(i)->value();
-    }
+    Tester tester;
+    tester.testing();
     return 0;
 }
