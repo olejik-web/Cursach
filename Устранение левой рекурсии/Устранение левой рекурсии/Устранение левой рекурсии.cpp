@@ -409,9 +409,9 @@ void Node::calcExpression()
     if (m_value == "E")
     {
         collectTokens();
-        /* for (auto t : m_tokens)
-            cout << t.first << " ";
-        cout << "\n";*/
+        // for (auto t : m_tokens)
+            // cout << "{" << t.first << ", " << t.second << "} ";
+        // cout << "\n";
         transferToPostfixTokens(m_tokens, m_postfixTokens);
         m_calcValue = calcPostfixTokensExpression(m_postfixTokens);
         m_expression = "$" + to_string(NodesCalculatedValuesMap.size()) + "$";
@@ -440,11 +440,11 @@ void Node::collectTokens()
             calcValueCode += '$';
             ip++;
         }
-        if (calcValueCode.size() > 1 && minusFlag)
+        if (calcValueCode.size() > 1 && minusFlag) // here
         {
             if (tmp.empty() || (tmp.back().first == "-" || tmp.back().first == "+"
                 || tmp.back().first == "*" || tmp.back().first == "/" ||
-                tmp.back().first == "("))
+                tmp.back().first == "(" || tmp.back().first == "^"))
                 tmp.push_back({ calcValueCode, haveMinus });
             else
             {
@@ -473,7 +473,7 @@ void Node::collectTokens()
                 {
                     if (tmp.empty() || (tmp.back().first == "-" || tmp.back().first == "+"
                         || tmp.back().first == "*" || tmp.back().first == "/" ||
-                        tmp.back().first == "("))
+                        tmp.back().first == "(" || tmp.back().first == "^"))
                         tmp.push_back({ word, haveMinus });
                     else
                     {
@@ -561,7 +561,7 @@ void Node::printTree(int level)
     cout << m_value << " " << m_expression << " ";
     if (m_value == "E")
     {
-        // cout << m_calcValue << " ";
+        cout << "ok" << " ";
         for (auto t : m_tokens)
             cout << "{" << t.first << " " << t.second << "} ";
         cout << "| ";
@@ -1144,6 +1144,7 @@ void getLLFromMyGrammar()
     // leftFactorisation(Grammar);
     fillFIRST(Grammar, Terminals, NotTerminals);
     fillFOLLOW(Grammar, Terminals, NotTerminals, StartNotTerminal);
+    printFOLLOW();
     if (checkLL(Grammar, Terminals, NotTerminals))
         cout << "Success!\n";
     else
@@ -1353,9 +1354,28 @@ double executeExpression18(double x, double t)
     return 200*pow(t, 3);
 }
 
+// 200t^-3
+double executeExpression19(double x, double t)
+{
+    return 200 * pow(t, -3);
+}
+
+// 1/-9
+double executeExpression20(double x, double t)
+{
+    return 1.0/-9.0;
+}
+
+// 2xt^--(--x^-3+5/-9t)
+double executeExpression21(double x, double t)
+{
+    return 2 * x * pow(t, -(-(-(-pow(x, -3)) + 5.0 / -9.0 * t)));
+    // 2*x*pow(t, -(-(-(-pow(x, -3))+5/-9*t)));
+}
+
 Tester::Tester()
 {
-    addTest("2xt", executeExpression2, { {1, 0}, {-2, 7}, { 33, -11 } });
+    addTest("2xt", executeExpression2, {{1, 0}, {-2, 7}, {33, -11}});
     addTest("sin(x^3)cos(t^(x/15))2/tx+2t^3", executeExpression1,
         { {M_PI / 2, M_PI / 8}, {-20 * M_PI / 2, M_PI + 10 / 8}, {35, 26}, { 7, 23 } });
     addTest("t^(x/15)", executeExpression3, { {7, 23} });
@@ -1390,6 +1410,12 @@ Tester::Tester()
         {225.049, -818.449}, {368.900, -797.374} });
     addTest("200t^3", executeExpression18, { {2.392, 7.013},
         {1.725, 9.846}, {12.003, -11.334} });
+    addTest("200t^-3", executeExpression19, { {2.392, 7.013},
+        {1.725, 9.846}, {12.003, -11.334} });
+    addTest("1/-9", executeExpression20, { {2.392, 7.013},
+        {1.725, 9.846}, {12.003, -11.334} });
+    addTest("2xt^--(--x^-3+5/-9t)", executeExpression21, { {2.392, 7.013},
+        {1.725, 9.846}, {12, 11} }); // 2xt^--(--x^-3+5/-9t)
 };
 
 inline void Tester::addTest(string expression, double(*executeExpression)(double, double), 
@@ -1496,10 +1522,24 @@ int main()
     sort(UsedWords.begin(), UsedWords.end(), comp);
     reverse(Terminals.begin(), Terminals.end());
     reverse(UsedWords.begin(), UsedWords.end());
-    map<string, vector<string>>tmpGrammar;
+    map<string, vector<string>> tmpGrammar;
     getLLFromMyGrammar();
     fillTable(Grammar, Terminals, NotTerminals);
     Tester tester;
     tester.testing();
+    printGrammar(Grammar);
+    bool resultOfAnalyseExpression = analyseExpression(
+        "x^2", StartNotTerminal, Terminals,
+        NotTerminals, parseTree);
+    if (resultOfAnalyseExpression)
+    {
+        parseTree->reverseTree();
+        parseTree->printTree(0);
+        xVALUE = 5;
+        parseTree->calcExpression();
+        cout << parseTree->calcValue();
+    }
+    else
+        cout << "error in expression";
     return 0;
 }
