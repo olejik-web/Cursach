@@ -16,13 +16,27 @@ DEFINES += QT_DEPRECATED_WARNINGS
 #DEFINES += QT_DISABLE_DEPRECATED_BEFORE=0x060000    # disables all the APIs deprecated before Qt 6.0.0
 
 SOURCES += \
+    Calculator.cpp \
     DifferentionalEquation.cpp \
+    Grammar.cpp \
+    GraphDrawer.cpp \
+    LL1Analyser.cpp \
+    Node.cpp \
+    Solver.cpp \
+    Tester.cpp \
     main.cpp \
     mainwindow.cpp \
     qcustomplot.cpp
 
 HEADERS += \
+    Calculator.h \
     DifferentionalEquation.h \
+    Grammar.h \
+    GraphDrawer.h \
+    LL1Analyser.h \
+    Node.h \
+    Solver.h \
+    Tester.h \
     mainwindow.h \
     qcustomplot.h
 

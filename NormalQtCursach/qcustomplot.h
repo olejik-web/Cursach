@@ -3965,6 +3965,7 @@ signals:
   void afterLayout();
   void afterReplot();
   
+  void resized(QRect rect);
 protected:
   // property members:
   QRect mViewport;
