@@ -1,6 +1,7 @@
 #include "Solver.h"
 
-Solver::Solver(Grammar* grammar, LL1Analyser* analyser) :
+Solver::Solver(Grammar* grammar, LL1Analyser* analyser, QObject* parent) :
+	QObject(parent),
 	m_grammar(grammar),
 	m_analyser(analyser)
 {}
@@ -84,6 +85,290 @@ void Solver::fillCalculatedSolveDataParts(double startX, double startT,
 		}
 		break;
 	}
+	case 3:
+	{
+		if (abs(startX - EXAMPLE_DIFFERENTIAL_EQUATION_3_START_X)
+			< Calculator::EPSILON_VALUE && abs(
+			startT - EXAMPLE_DIFFERENTIAL_EQUATION_3_START_T) <
+			Calculator::EPSILON_VALUE)
+		{
+			calculatedSolveDataParts.push_back(QPair<QVector<double>,
+				QVector<double>>());
+			for (int i = 0; i < pointsCount; i++)
+			{
+				double multiplier = i - pointsCount / 2.0;
+				double t = startT + stepLength * multiplier;
+				double x = exampleHandsFindedDifferentionalEquationSolve31(t);
+				calculatedSolveDataParts.back().first.push_back(x);
+				calculatedSolveDataParts.back().second.push_back(t);
+			}
+			calculatedSolveDataParts.push_back(QPair<QVector<double>,
+				QVector<double>>());
+			startX *= -1.0;
+			for (int i = 0; i < pointsCount; i++)
+			{
+				double multiplier = i - pointsCount / 2.0;
+				double t = startT + stepLength * multiplier;
+				double x = exampleHandsFindedDifferentionalEquationSolve32(t);
+				calculatedSolveDataParts.back().first.push_back(x);
+				calculatedSolveDataParts.back().second.push_back(t);
+			}
+			haveHandsFindedSolve = true;
+			return;
+		}
+		break;
+	}
+	case 4:
+	{
+		if (abs(startX - EXAMPLE_DIFFERENTIAL_EQUATION_4_START_X)
+			< Calculator::EPSILON_VALUE && abs(
+			startT - EXAMPLE_DIFFERENTIAL_EQUATION_4_START_T) <
+			Calculator::EPSILON_VALUE)
+		{
+			calculatedSolveDataParts.push_back(QPair<QVector<double>,
+				QVector<double>>());
+			for (int i = 0; i < pointsCount; i++)
+			{
+				double x = startX + stepLength * i;
+				double t = exampleHandsFindedDifferentionalEquationSolve4(x);
+				if (t <= 0)
+				{
+					calculatedSolveDataParts.back().first.push_back(x);
+					calculatedSolveDataParts.back().second.push_back(t);
+				}
+			}
+			calculatedSolveDataParts.push_back(QPair<QVector<double>,
+				QVector<double>>());
+			for (int i = 0; i < pointsCount; i++)
+			{
+				double x = startX - stepLength * i;
+				double t = exampleHandsFindedDifferentionalEquationSolve4(x);
+				if (t >= 0)
+				{
+					calculatedSolveDataParts.back().first.push_back(x);
+					calculatedSolveDataParts.back().second.push_back(t);
+				}
+			}
+			calculatedSolveDataParts.push_back(QPair<QVector<double>,
+				QVector<double>>());
+			for (int i = 0; i < pointsCount
+				&& -3.315 + stepLength * i < -0.01; i++)
+			{
+				double x = -3.315 + stepLength * i;
+				double t = exampleHandsFindedDifferentionalEquationSolve4(x);
+				if (t <= 0)
+				{
+					calculatedSolveDataParts.back().first.push_back(x);
+					calculatedSolveDataParts.back().second.push_back(t);
+				}
+			}
+			calculatedSolveDataParts.push_back(QPair<QVector<double>,
+				QVector<double>>());
+			for (int i = 0; i < pointsCount; i++)
+			{
+				double x = -3.315 - stepLength * i;
+				double t = exampleHandsFindedDifferentionalEquationSolve4(x);
+				if (t <= 0)
+				{
+					calculatedSolveDataParts.back().first.push_back(x);
+					calculatedSolveDataParts.back().second.push_back(t);
+				}
+			}
+			calculatedSolveDataParts.push_back(QPair<QVector<double>,
+				QVector<double>>());
+			for (int i = 0; i < pointsCount; i++)
+			{
+				double x = 3.315 + stepLength * i;
+				double t = exampleHandsFindedDifferentionalEquationSolve4(x);
+				if (t >= 0)
+				{
+					calculatedSolveDataParts.back().first.push_back(x);
+					calculatedSolveDataParts.back().second.push_back(t);
+				}
+			}
+			calculatedSolveDataParts.push_back(QPair<QVector<double>,
+				QVector<double>>());
+			for (int i = 0; i < pointsCount
+				&& 3.315 - stepLength * i > 0.01; i++)
+			{
+				double x = 3.315 - stepLength * i;
+				double t = exampleHandsFindedDifferentionalEquationSolve4(x);
+				if (t >= 0)
+				{
+					calculatedSolveDataParts.back().first.push_back(x);
+					calculatedSolveDataParts.back().second.push_back(t);
+				}
+			}
+			calculatedSolveDataParts.push_back(QPair<QVector<double>,
+				QVector<double>>());
+			for (int i = 0; i < 100; i++)
+			{
+				double x = startX + stepLength * i;
+				double t = exampleHandsFindedDifferentionalEquationSolve4(x);
+				if (t >= 0)
+				{
+					calculatedSolveDataParts.back().first.push_back(x);
+					calculatedSolveDataParts.back().second.push_back(t);
+				}
+			}
+			haveHandsFindedSolve = true;
+			return;
+		}
+		break;
+	}
+	case 5:
+	{
+		if (abs(startX - EXAMPLE_DIFFERENTIAL_EQUATION_5_START_X)
+			< Calculator::EPSILON_VALUE && abs(
+			startT - EXAMPLE_DIFFERENTIAL_EQUATION_5_START_T) <
+			Calculator::EPSILON_VALUE)
+		{
+			calculatedSolveDataParts.push_back(QPair<QVector<double>,
+				QVector<double>>());
+			for (int i = 0; i < pointsCount; i++)
+			{
+				double multiplier = i - pointsCount / 2.0;
+				double t = startT + stepLength * multiplier;
+				double x = exampleHandsFindedDifferentionalEquationSolve5(t);
+				calculatedSolveDataParts.back().first.push_back(x);
+				calculatedSolveDataParts.back().second.push_back(t);
+			}
+			calculatedSolveDataParts.push_back(QPair<QVector<double>,
+				QVector<double>>());
+			startT *= -1.0;
+			for (int i = 0; i < pointsCount; i++)
+			{
+				double multiplier = i - pointsCount / 2.0;
+				double t = startT + stepLength * multiplier;
+				double x = exampleHandsFindedDifferentionalEquationSolve5(t);
+				calculatedSolveDataParts.back().first.push_back(x);
+				calculatedSolveDataParts.back().second.push_back(t);
+			}
+			haveHandsFindedSolve = true;
+			return;
+		}
+		break;
+	}
+	case 6:
+	{
+		if (abs(startX - EXAMPLE_DIFFERENTIAL_EQUATION_6_START_X)
+			< Calculator::EPSILON_VALUE && abs(
+			startT - EXAMPLE_DIFFERENTIAL_EQUATION_6_START_T) <
+			Calculator::EPSILON_VALUE)
+		{
+			calculatedSolveDataParts.push_back(QPair<QVector<double>,
+				QVector<double>>());
+			for (int i = 0; i < pointsCount; i++)
+			{
+				double multiplier = i - pointsCount / 2.0;
+				double t = startT + stepLength * multiplier;
+				double x = exampleHandsFindedDifferentionalEquationSolve61(t);
+				calculatedSolveDataParts.back().first.push_back(x);
+				calculatedSolveDataParts.back().second.push_back(t);
+			}
+			calculatedSolveDataParts.push_back(QPair<QVector<double>,
+				QVector<double>>());
+			for (int i = 0; i < pointsCount; i++)
+			{
+				double multiplier = i - pointsCount / 2.0;
+				double t = startT + stepLength * multiplier;
+				double x = exampleHandsFindedDifferentionalEquationSolve62(t);
+				calculatedSolveDataParts.back().first.push_back(x);
+				calculatedSolveDataParts.back().second.push_back(t);
+			}
+			haveHandsFindedSolve = true;
+			return;
+		}
+		break;
+	}
+	case 7:
+	{
+		if (abs(startX - EXAMPLE_DIFFERENTIAL_EQUATION_7_START_X)
+			< Calculator::EPSILON_VALUE && abs(
+			startT - EXAMPLE_DIFFERENTIAL_EQUATION_7_START_T) <
+			Calculator::EPSILON_VALUE)
+		{
+			calculatedSolveDataParts.push_back(QPair<QVector<double>,
+				QVector<double>>());
+			for (int i = 0; i < pointsCount; i++)
+			{
+				double multiplier = i - pointsCount / 2.0;
+				double t = startT + stepLength * multiplier;
+				double x = exampleHandsFindedDifferentionalEquationSolve7(t);
+				calculatedSolveDataParts.back().first.push_back(x);
+				calculatedSolveDataParts.back().second.push_back(t);
+			}
+			haveHandsFindedSolve = true;
+			return;
+		}
+		break;
+	}
+	case 8:
+	{
+		if (abs(startX - EXAMPLE_DIFFERENTIAL_EQUATION_8_START_X)
+			< Calculator::EPSILON_VALUE && abs(
+			startT - EXAMPLE_DIFFERENTIAL_EQUATION_8_START_T) <
+			Calculator::EPSILON_VALUE)
+		{
+			calculatedSolveDataParts.push_back(QPair<QVector<double>,
+				QVector<double>>());
+			for (int i = 0; i < pointsCount; i++)
+			{
+				double multiplier = i - pointsCount / 2.0;
+				double t = startT + stepLength * multiplier;
+				double x = exampleHandsFindedDifferentionalEquationSolve81(t);
+				calculatedSolveDataParts.back().first.push_back(x);
+				calculatedSolveDataParts.back().second.push_back(t);
+			}
+			calculatedSolveDataParts.push_back(QPair<QVector<double>,
+				QVector<double>>());
+			for (int i = 0; i < pointsCount; i++)
+			{
+				double multiplier = i - pointsCount / 2.0;
+				double t = startT + stepLength * multiplier;
+				double x = exampleHandsFindedDifferentionalEquationSolve82(t);
+				calculatedSolveDataParts.back().first.push_back(x);
+				calculatedSolveDataParts.back().second.push_back(t);
+			}
+			calculatedSolveDataParts.push_back(QPair<QVector<double>,
+				QVector<double>>());
+			for (int i = 0; i < pointsCount; i++)
+			{
+				double multiplier = i - pointsCount / 2.0;
+				double t = startT + stepLength * multiplier;
+				double x = exampleHandsFindedDifferentionalEquationSolve83(t);
+				calculatedSolveDataParts.back().first.push_back(x);
+				calculatedSolveDataParts.back().second.push_back(t);
+			}
+			haveHandsFindedSolve = true;
+			return;
+		}
+		break;
+	}
+	case 9:
+	{
+		if (abs(startX - EXAMPLE_DIFFERENTIAL_EQUATION_9_START_X)
+			< Calculator::EPSILON_VALUE && abs(
+			startT - EXAMPLE_DIFFERENTIAL_EQUATION_9_START_T) <
+			Calculator::EPSILON_VALUE)
+		{
+			calculatedSolveDataParts.push_back(QPair<QVector<double>,
+				QVector<double>>());
+			for (int i = 0; i < pointsCount; i++)
+			{
+				double multiplier = i - pointsCount / 2.0;
+				double t = startT + stepLength * multiplier;
+				double x = exampleHandsFindedDifferentionalEquationSolve9(t);
+				if (t >= 0)
+					break;
+				calculatedSolveDataParts.back().first.push_back(x);
+				calculatedSolveDataParts.back().second.push_back(t);
+			}
+			haveHandsFindedSolve = true;
+			return;
+		}
+		break;
+	}
 	}
 	haveHandsFindedSolve = false;
 }
@@ -108,7 +393,7 @@ void Solver::calculateHandsFindedSolve(const
 
 void Solver::calculatorSolveRungeCutta(double startX, double startT,
 	double stepLength, int pointsCount, QVector<double>& xValues,
-	QVector<double>& tValues, QString& statusBarMessage)
+	QVector<double>& tValues, bool* canCalculate)
 {
 	double x = startX;
 	double t = startT;
@@ -116,10 +401,13 @@ void Solver::calculatorSolveRungeCutta(double startX, double startT,
 	Calculator calculator(m_grammar);
 	xValues.push_back(x);
 	tValues.push_back(t);
+	emit calculatePoint(t, x);
 	Calculator::WorkStatus workStatus = Calculator::WorkStatus::Success;
 	int successCalculatedPointsCount = 0;
 	for (int i=0; i < pointsCount; i++)
 	{
+		if (!*canCalculate)
+			return;
 		std::string expression;
 		double k1 = calculator.calculateValue(expression,
 			m_analyser->parseTree(), x, t, workStatus);
@@ -127,12 +415,14 @@ void Solver::calculatorSolveRungeCutta(double startX, double startT,
 			break;
 		expression = "";
 		double k2 = calculator.calculateValue(expression,
-			m_analyser->parseTree(), x + h / 2.0 * k1, t + h / 2.0, workStatus);
+			m_analyser->parseTree(), x + h / 2.0 * k1,
+			t + h / 2.0, workStatus);
 		if (workStatus != Calculator::WorkStatus::Success)
 			break;
 		expression = "";
 		double k3 = calculator.calculateValue(expression,
-			m_analyser->parseTree(), x + h / 2.0 * k2, t + h / 2.0, workStatus);
+			m_analyser->parseTree(), x + h / 2.0 * k2,
+			t + h / 2.0, workStatus);
 		if (workStatus != Calculator::WorkStatus::Success)
 			break;
 		expression = "";
@@ -145,54 +435,51 @@ void Solver::calculatorSolveRungeCutta(double startX, double startT,
 		xValues.push_back(x);
 		tValues.push_back(t);
 		successCalculatedPointsCount++;
-		// qInfo() << k1 << k2 << k3 << k4;
-		// qInfo() << "--" << x << t;
+		emit updateStatusBar(
+			QString("Вычислено значение решения в %1 из %2 точек").arg(
+			successCalculatedPointsCount).arg(pointsCount));
+		emit calculatePoint(t, x);
 	}
 	switch (workStatus)
 	{
 	case Calculator::WorkStatus::Success:
-		statusBarMessage =
-			QString("Все %1 точек были успешно посчитаны "
-			"и отрисованы!").arg(pointsCount);
+		emit updateStatusBar(QString("Все %1 точек были успешно посчитаны "
+			"и отрисованы!").arg(pointsCount));
 		return;
 	case Calculator::WorkStatus::BracketsError:
-		statusBarMessage = QString("В выражении не соблюден баланс скобок! "
-			"Приведите его к правильному виду!");
+		emit updateStatusBar(
+			QString("В выражении не соблюден баланс скобок! "
+			"Приведите его к правильному виду!"));
 		return;
 	case Calculator::WorkStatus::DivisionOnZeroError:
-		statusBarMessage =
-			QString("При вычислении значения в точке %1 "
+		emit updateStatusBar(QString("При вычислении значения в точке %1 "
 			"произошло деление на ноль, поэтому были "
 			"посчитаны успешно только %2 точек").arg(t + h).arg(
-			successCalculatedPointsCount);
+			successCalculatedPointsCount));
 		return;
 	case Calculator::WorkStatus::LogarithmNegativeValueError:
-		statusBarMessage =
-			QString("При вычислении значения в точке %1 "
-			"под логарифмом соказалось не положительное число, поэтому были "
+		emit updateStatusBar(QString("При вычислении значения в точке %1 "
+			"под логарифмом оказалось не положительное число, поэтому были "
 			"посчитаны успешно только %2 точек").arg(t + h).arg(
-			successCalculatedPointsCount);
+			successCalculatedPointsCount));
 		return;
 	case Calculator::WorkStatus::SqrtNegativeValueError:
-		statusBarMessage =
-			QString("При вычислении значения в точке %1 "
+		emit updateStatusBar(QString("При вычислении значения в точке %1 "
 			"под корнем оказалось отрицательное число, поэтому были "
 			"посчитаны успешно только %2 точек").arg(t + h).arg(
-			successCalculatedPointsCount);
+			successCalculatedPointsCount));
 		return;
 	case Calculator::WorkStatus::TgValueError:
-		statusBarMessage =
-			QString("При вычислении значения в точке %1 "
+		emit updateStatusBar(QString("При вычислении значения в точке %1 "
 			"под тангенсом оказалось число, которое не входит в область "
 			"определения данной функции, поэтому были посчитаны успешно "
-			"только %2 точек").arg(t + h).arg(successCalculatedPointsCount);
+			"только %2 точек").arg(t + h).arg(successCalculatedPointsCount));
 		return;
 	case Calculator::WorkStatus::CtgValueError:
-		statusBarMessage =
-			QString("При вычислении значения в точке %1 "
+		emit updateStatusBar(QString("При вычислении значения в точке %1 "
 			"под котангенсом оказалось число, которое не входит в область "
 			"определения данной функции, поэтому были посчитаны успешно "
-			"только %2 точек").arg(t + h).arg(successCalculatedPointsCount);
+			"только %2 точек").arg(t + h).arg(successCalculatedPointsCount));
 		return;
 	}
 }

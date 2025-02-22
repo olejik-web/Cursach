@@ -8,14 +8,18 @@
 #include <QPair>
 #include "Calculator.h"
 #include "LL1Analyser.h"
+#include <QStatusBar>
+#include <QObject>
 
-class Solver
+class Solver : public QObject
 {
+	Q_OBJECT
 public:
-	Solver(Grammar* grammar, LL1Analyser* analyser);
+	Solver(Grammar* grammar, LL1Analyser* analyser,
+		QObject* parent = nullptr);
 	void calculatorSolveRungeCutta(double startX, double startT,
 		double stepLength, int pointsCount, QVector<double>& xValues,
-		QVector<double>& tValues, QString& statusBarMessage);
+		QVector<double>& tValues, bool* canCalculate);
 	void compilerSolveRungeCutta(const std::string& differentialEquation,
 		double startX, double startT, double stepLength, int pointsCount,
 		QVector<double>& xValues, QVector<double>& tValues,
@@ -34,12 +38,16 @@ public:
 		exampleDifferentionalEquationIndex, double xValue, double tValue);
 	double exampleHandsFindedDifferentionalEquationSolve1(double t) const;
 	double exampleHandsFindedDifferentionalEquationSolve2(double t) const;
-	double exampleHandsFindedDifferentionalEquationSolve3(double t) const;
+	double exampleHandsFindedDifferentionalEquationSolve31(double t) const;
+	double exampleHandsFindedDifferentionalEquationSolve32(double t) const;
 	double exampleHandsFindedDifferentionalEquationSolve4(double t) const;
 	double exampleHandsFindedDifferentionalEquationSolve5(double t) const;
-	double exampleHandsFindedDifferentionalEquationSolve6(double t) const;
+	double exampleHandsFindedDifferentionalEquationSolve61(double t) const;
+	double exampleHandsFindedDifferentionalEquationSolve62(double t) const;
 	double exampleHandsFindedDifferentionalEquationSolve7(double t) const;
-	double exampleHandsFindedDifferentionalEquationSolve8(double t) const;
+	double exampleHandsFindedDifferentionalEquationSolve81(double t) const;
+	double exampleHandsFindedDifferentionalEquationSolve82(double t) const;
+	double exampleHandsFindedDifferentionalEquationSolve83(double t) const;
 	double exampleHandsFindedDifferentionalEquationSolve9(double t) const;
 	double exampleDifferentialEquation1(double x, double t) const;
 	double exampleDifferentialEquation2(double x, double t) const;
@@ -52,14 +60,18 @@ public:
 	double exampleDifferentialEquation9(double x, double t) const;
 	int isExampleDifferentionalEquation(
 		const std::string& differentialEquation) const;
+
+signals:
+	void updateStatusBar(const QString& message, int timeout = 0);
+	void calculatePoint(double t, double x);
+
 private:
 	const int INVALID_EXAMPLE_DIFFERENTIONAL_EQUATION_NUMBER{-1};
 
 	const double EXAMPLE_DIFFERENTIAL_EQUATION_1_START_X{7.0};
 	const double EXAMPLE_DIFFERENTIAL_EQUATION_1_START_T{5.0};
 
-	const double EXAMPLE_DIFFERENTIAL_EQUATION_2_START_X{
-		Calculator::PI_VALUE / 12.0};
+	const double EXAMPLE_DIFFERENTIAL_EQUATION_2_START_X{0.26179};
 	const double EXAMPLE_DIFFERENTIAL_EQUATION_2_START_T{0.5};
 
 	const double EXAMPLE_DIFFERENTIAL_EQUATION_3_START_X{15.0};
@@ -69,8 +81,7 @@ private:
 	const double EXAMPLE_DIFFERENTIAL_EQUATION_4_START_T{5.0};
 
 	const double EXAMPLE_DIFFERENTIAL_EQUATION_5_START_X{0};
-	const double EXAMPLE_DIFFERENTIAL_EQUATION_5_START_T{
-		exp(0.5 * atan2(-1.0, 2.0) - Calculator::PI_VALUE / 8.0)};
+	const double EXAMPLE_DIFFERENTIAL_EQUATION_5_START_T{0.53551};
 
 	const double EXAMPLE_DIFFERENTIAL_EQUATION_6_START_X{3.0};
 	const double EXAMPLE_DIFFERENTIAL_EQUATION_6_START_T{12.0};
@@ -114,10 +125,16 @@ inline double Solver::exampleHandsFindedDifferentionalEquationSolve2(
 	return t * asin(t);
 }
 
-inline double Solver::exampleHandsFindedDifferentionalEquationSolve3(
+inline double Solver::exampleHandsFindedDifferentionalEquationSolve31(
 	double t) const
 {
 	return -t + sqrt(t * t + 465);
+}
+
+inline double Solver::exampleHandsFindedDifferentionalEquationSolve32(
+	double t) const
+{
+	return -t - sqrt(t * t - 15);
 }
 
 inline double Solver::exampleHandsFindedDifferentionalEquationSolve4(
@@ -133,10 +150,16 @@ inline double Solver::exampleHandsFindedDifferentionalEquationSolve5(
 }
 
 
-inline double Solver::exampleHandsFindedDifferentionalEquationSolve6(
+inline double Solver::exampleHandsFindedDifferentionalEquationSolve61(
 	double t) const
 {
 	return (25.0 * t * t / 252.0 - t) / (1.0 - 5.0 * t / 252.0);
+}
+
+inline double Solver::exampleHandsFindedDifferentionalEquationSolve62(
+	double t) const
+{
+	return -5.0 * t;
 }
 
 inline double Solver::exampleHandsFindedDifferentionalEquationSolve7(
@@ -145,10 +168,22 @@ inline double Solver::exampleHandsFindedDifferentionalEquationSolve7(
 	return t * t / (t - 6);
 }
 
-inline double Solver::exampleHandsFindedDifferentionalEquationSolve8(
+inline double Solver::exampleHandsFindedDifferentionalEquationSolve81(
 	double t) const
 {
 	return (1 - 3 * t * t * t * t) / (-2 * t);
+}
+
+inline double Solver::exampleHandsFindedDifferentionalEquationSolve82(
+	double t) const
+{
+	return t;
+}
+
+inline double Solver::exampleHandsFindedDifferentionalEquationSolve83(
+	double t) const
+{
+	return 0;
 }
 
 inline double Solver::exampleHandsFindedDifferentionalEquationSolve9(

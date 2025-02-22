@@ -16,8 +16,10 @@ DEFINES += QT_DEPRECATED_WARNINGS
 #DEFINES += QT_DISABLE_DEPRECATED_BEFORE=0x060000    # disables all the APIs deprecated before Qt 6.0.0
 
 SOURCES += \
+    CalculateThread.cpp \
     Calculator.cpp \
     DifferentionalEquation.cpp \
+    DrawProgressDialog.cpp \
     Grammar.cpp \
     GraphDrawer.cpp \
     LL1Analyser.cpp \
@@ -29,8 +31,10 @@ SOURCES += \
     qcustomplot.cpp
 
 HEADERS += \
+    CalculateThread.h \
     Calculator.h \
     DifferentionalEquation.h \
+    DrawProgressDialog.h \
     Grammar.h \
     GraphDrawer.h \
     LL1Analyser.h \
@@ -46,4 +50,5 @@ else: unix:!android: target.path = /opt/$${TARGET}/bin
 !isEmpty(target.path): INSTALLS += target
 
 FORMS += \
+    DrawProgressDialog.ui \
     mainwindow.ui

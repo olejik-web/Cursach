@@ -3,6 +3,12 @@
 LL1Analyser::LL1Analyser(Grammar* grammar, bool* isLL) :
 	m_grammar(grammar)
 {
+	if (!grammar)
+	{
+		if (isLL)
+			*isLL = false;
+		return;
+	}
 	initialiseFirst();
 	initialiseFollow();
 	if (isLL)

@@ -14,7 +14,7 @@
 class LL1Analyser
 {
 public:
-	explicit LL1Analyser(Grammar* grammar, bool* isLL = nullptr);
+	explicit LL1Analyser(Grammar* grammar = nullptr, bool* isLL = nullptr);
 	std::set<std::string> fromTokensFirst(
 		const std::vector<std::string>& tokens);
 	void printFirst() const;
