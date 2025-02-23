@@ -8,14 +8,12 @@
 #include <QValidator>
 #include <QMessageBox>
 #include <QRect>
-#include "DifferentionalEquation.h"
 #include "Grammar.h"
 #include "LL1Analyser.h"
 #include "Calculator.h"
 #include "Tester.h"
 #include "Solver.h"
 #include "GraphDrawer.h"
-#include "DrawProgressDialog.h"
 #include "CalculateThread.h"
 
 namespace Ui {
@@ -27,11 +25,12 @@ class MainWindow : public QMainWindow
 	Q_OBJECT
 public:
 	MainWindow(QWidget *parent = nullptr);
+	~MainWindow();
 	void drawGraph(QVector<double>& x,
 		QVector<double>& y, const QColor& color);
 	void drawInputDataGraph();
 	void moveParametersWidget(QRect currentPlotRect);
-	~MainWindow();
+	void allowDrawGraph();
 private:
 	Ui::MainWindow* ui;
 	QDoubleValidator m_doubleValidator;

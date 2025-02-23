@@ -2,6 +2,7 @@
 #define GRAPHDRAWER_H
 
 #include <QVector>
+#include <QTimer>
 #include <QPair>
 #include <QObject>
 #include "qcustomplot.h"
@@ -32,23 +33,32 @@ public:
 	void drawNextPointCalculateRungeKuttaSolveGraph(double t, double x);
 	void drawCalculatorRungeKuttaSolveFullGraph();
 	void clearPlot();
+	void updatePlot();
 signals:
-	void drawedCalculatorRungeKuttaSolveFullGraph(bool drawedValue);
+	void drawedCalculatorRungeKuttaSolveFullGraph();
 private:
 	QCustomPlot* m_plot;
 	Grammar* m_grammar;
 	LL1Analyser* m_analyser;
-	std::unique_ptr<CalculateThread> m_calculateRungeKuttaThread;
 	QCPGraph* calculatorRungeKuttaSolvePlotGraph;
+	std::unique_ptr<CalculateThread> m_calculateRungeKuttaThread;
+	QTimer m_timer;
 };
+
+inline void GraphDrawer::drawNextPointCalculateRungeKuttaSolveGraph(
+	double t, double x)
+{
+	calculatorRungeKuttaSolvePlotGraph->addData(t, x);
+}
+
+inline void GraphDrawer::updatePlot()
+{
+	m_plot->replot();
+}
 
 inline void GraphDrawer::drawCalculatorRungeKuttaSolveFullGraph()
 {
-	calculatorRungeKuttaSolvePlotGraph->setData(
-		*m_calculateRungeKuttaThread->tValues(),
-		*m_calculateRungeKuttaThread->xValues());
-	m_plot->replot();
-	emit drawedCalculatorRungeKuttaSolveFullGraph(true);
+	emit drawedCalculatorRungeKuttaSolveFullGraph();
 }
 
 inline void GraphDrawer::clearPlot()

@@ -392,15 +392,12 @@ void Solver::calculateHandsFindedSolve(const
 }
 
 void Solver::calculatorSolveRungeCutta(double startX, double startT,
-	double stepLength, int pointsCount, QVector<double>& xValues,
-	QVector<double>& tValues, bool* canCalculate)
+	double stepLength, int pointsCount, bool* canCalculate)
 {
 	double x = startX;
 	double t = startT;
 	double h = stepLength;
 	Calculator calculator(m_grammar);
-	xValues.push_back(x);
-	tValues.push_back(t);
 	emit calculatePoint(t, x);
 	Calculator::WorkStatus workStatus = Calculator::WorkStatus::Success;
 	int successCalculatedPointsCount = 0;
@@ -432,8 +429,6 @@ void Solver::calculatorSolveRungeCutta(double startX, double startT,
 			break;
 		x += h / 6.0 * (k1 + 2.0 * k2 + 2.0 * k3 + k4);
 		t += h;
-		xValues.push_back(x);
-		tValues.push_back(t);
 		successCalculatedPointsCount++;
 		emit updateStatusBar(
 			QString("Вычислено значение решения в %1 из %2 точек").arg(
@@ -516,8 +511,6 @@ void Solver::compilerSolveRungeCutta(const std::string& differentialEquation,
 			exampleDifferentionalEquationIndex, x + h * k3, t + h);
 		x += h / 6.0 * (k1 + 2.0 * k2 + 2.0 * k3 + k4);
 		t += h;
-		// qInfo() << k1 << k2 << k3 << k4;
-		// qInfo() << x << t;
 		xValues.push_back(x);
 		tValues.push_back(t);
 	}

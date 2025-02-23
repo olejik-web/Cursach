@@ -74,8 +74,6 @@ bool Tester::testing()
 	Calculator calculator(m_grammar);
 	for (auto test : m_tests)
 	{
-		// int acceptedTestsCount = 0;
-		// int failedTestsCount = 0;
 		std::vector<std::pair<double, double>> testResults;
 		if (m_analyser->analyseExpression(test.first))
 		{

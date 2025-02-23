@@ -22,15 +22,22 @@ MainWindow::MainWindow(QWidget *parent)
 	ui->plotWidget->setInteractions(QCP::iRangeDrag | QCP::iRangeZoom);
 	ui->plotWidget->xAxis->setLabel("t");
 	ui->plotWidget->yAxis->setLabel("x");
-	m_graphDrawer = std::make_unique<GraphDrawer>(
-		ui->plotWidget, &m_grammar, &m_analyser);
 	connect(ui->plotWidget, &QCustomPlot::resized,
 		this, &MainWindow::moveParametersWidget);
 	connect(ui->drawGraphButton, &QPushButton::clicked,
 		this, &MainWindow::drawInputDataGraph);
+	m_graphDrawer = std::make_unique<GraphDrawer>(ui->plotWidget,
+		&m_grammar, &m_analyser);
 	connect(m_graphDrawer.get(),
 		&GraphDrawer::drawedCalculatorRungeKuttaSolveFullGraph,
-		ui->drawGraphButton, &QPushButton::setEnabled);
+		this, &MainWindow::allowDrawGraph);
+	ui->plotWidget->axisRect()->insetLayout()->setInsetAlignment(
+		0, Qt::AlignLeft|Qt::AlignBottom);
+}
+
+void MainWindow::allowDrawGraph()
+{
+	ui->drawGraphButton->setEnabled(true);
 }
 
 void MainWindow::moveParametersWidget(QRect currentPlotRect)
@@ -58,13 +65,14 @@ void MainWindow::drawInputDataGraph()
 	{
 		ui->drawGraphButton->setEnabled(false);
 		m_graphDrawer->clearPlot();
-		m_graphDrawer->drawGraph(diffur, startX, startT, h, n,
-			GraphDrawer::GraphType::HandsFindedSolveGraph, ui->statusBar);
-		m_graphDrawer->drawGraph(diffur, startX, startT, h, n,
-			GraphDrawer::GraphType::CalculatorRungeKuttaSolveGraph,
+		m_graphDrawer->drawGraph(diffur, startX, startT,
+			h, n, GraphDrawer::GraphType::HandsFindedSolveGraph,
 			ui->statusBar);
-		m_graphDrawer->drawGraph(diffur, startX, startT, h, n / 2,
-			GraphDrawer::GraphType::CompilerRungeKuttaSolveGraph,
+		m_graphDrawer->drawGraph(diffur, startX, startT,
+			h, n, GraphDrawer::GraphType::CompilerRungeKuttaSolveGraph,
+			ui->statusBar);
+		m_graphDrawer->drawGraph(diffur, startX, startT,
+			h, n, GraphDrawer::GraphType::CalculatorRungeKuttaSolveGraph,
 			ui->statusBar);
 	}
 }

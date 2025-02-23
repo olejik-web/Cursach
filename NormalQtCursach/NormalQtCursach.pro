@@ -18,8 +18,6 @@ DEFINES += QT_DEPRECATED_WARNINGS
 SOURCES += \
     CalculateThread.cpp \
     Calculator.cpp \
-    DifferentionalEquation.cpp \
-    DrawProgressDialog.cpp \
     Grammar.cpp \
     GraphDrawer.cpp \
     LL1Analyser.cpp \
@@ -33,8 +31,6 @@ SOURCES += \
 HEADERS += \
     CalculateThread.h \
     Calculator.h \
-    DifferentionalEquation.h \
-    DrawProgressDialog.h \
     Grammar.h \
     GraphDrawer.h \
     LL1Analyser.h \

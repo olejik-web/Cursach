@@ -8,6 +8,9 @@ GraphDrawer::GraphDrawer(QCustomPlot* plot, Grammar* grammar,
 	m_analyser(analyser)
 {
 	clearPlot();
+	connect(&m_timer, &QTimer::timeout, this,
+		QOverload<>::of(&GraphDrawer::updatePlot));
+	m_timer.start(40);
 }
 
 GraphDrawer::~GraphDrawer()
@@ -20,17 +23,11 @@ GraphDrawer::~GraphDrawer()
 	}
 }
 
-void GraphDrawer::drawNextPointCalculateRungeKuttaSolveGraph(
-	double t, double x)
-{
-	calculatorRungeKuttaSolvePlotGraph->addData(t, x);
-	m_plot->replot();
-}
-
 void GraphDrawer::drawGraph(const std::string& differentionalEquation,
 	double startX, double startT, double stepLength, int pointsCount,
 	GraphDrawer::GraphType graphType, QStatusBar* statusBar)
 {
+	m_plot->legend->setVisible(true);
 	QPen pen;
 	Solver solver(m_grammar, m_analyser);
 	switch (graphType)
@@ -49,6 +46,8 @@ void GraphDrawer::drawGraph(const std::string& differentionalEquation,
 		{
 			m_plot->addGraph();
 			m_plot->graph()->setPen(pen);
+			m_plot->graph()->setName(
+				QString("График решения, вычисленного вручную"));
 			m_plot->graph()->setData(graphPart.second, graphPart.first);
 		}
 		break;
@@ -67,6 +66,8 @@ void GraphDrawer::drawGraph(const std::string& differentionalEquation,
 			break;
 		m_plot->addGraph();
 		m_plot->graph()->setPen(pen);
+		m_plot->graph()->setName(
+			QString("График решения, вычисленного компилятором"));
 		m_plot->graph()->setData(tValues, xValues);
 		break;
 	}
@@ -76,21 +77,22 @@ void GraphDrawer::drawGraph(const std::string& differentionalEquation,
 		pen.setWidth(3);
 		m_plot->addGraph();
 		m_plot->graph()->setPen(pen);
+		m_plot->graph()->setName(
+			QString("График решения, вычисленного программой"));
 		calculatorRungeKuttaSolvePlotGraph = m_plot->graph();
 		m_calculateRungeKuttaThread = std::make_unique<CalculateThread>(
 			m_grammar, m_analyser, differentionalEquation, startX, startT,
 			stepLength, pointsCount, statusBar);
-		/* connect(m_calculateRungeKuttaThread.get(),
+		connect(m_calculateRungeKuttaThread.get(),
 			&CalculateThread::calculatePoint, this,
-			&GraphDrawer::drawNextPointCalculateRungeKuttaSolveGraph);*/
+			&GraphDrawer::drawNextPointCalculateRungeKuttaSolveGraph);
 		connect(m_calculateRungeKuttaThread.get(),
 			&CalculateThread::finished, this,
-			&GraphDrawer::drawCalculatorRungeKuttaSolveFullGraph);
+			&GraphDrawer::drawedCalculatorRungeKuttaSolveFullGraph);
 		m_calculateRungeKuttaThread->start();
 		break;
 	}
 	}
-	m_plot->replot();
 	m_plot->xAxis->setRange(startT - m_plot->width() / 2,
 		startT + m_plot->width() / 2);
 	m_plot->yAxis->setRange(startX - m_plot->height() / 2,

@@ -18,14 +18,9 @@ CalculateThread::CalculateThread(Grammar* grammar,
 		this, &CalculateThread::calculatePoint);
 }
 
-CalculateThread::~CalculateThread()
-{
-	qInfo() << "thread dectruction";
-}
-
 void CalculateThread::run()
 {
 	m_started = true;
 	m_solver.calculatorSolveRungeCutta(m_startX, m_startT, m_stepLength,
-		m_pointsCount, m_xValues, m_tValues, &m_started);
+		m_pointsCount, &m_started);
 }

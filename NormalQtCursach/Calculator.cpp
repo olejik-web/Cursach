@@ -13,8 +13,6 @@ void Calculator::collectTokens(const std::string expression,
 	std::vector<std::pair<std::string, bool>> tmp;
 	while (ip < expression.size())
 	{
-		// cout << ip << " " << m_expression.size()
-		// << " " << m_expression << "\n";
 		std::string calcValueCode = "$";
 		if (expression[ip] == '$')
 		{
@@ -85,7 +83,6 @@ void Calculator::collectTokens(const std::string expression,
 	}
 	for (auto p : tmp)
 	{
-		// cout << p.first << "\n";
 		if (m_grammar->isDigit(p.first))
 		{
 			if (!tokens.empty() && tokens.back().first.back() >= '0'
@@ -134,9 +131,6 @@ void Calculator::transferToPostfixTokens(const
 	{ {"(", 0}, {"+", 1}, {"-", 1}, {"*", 2}, {"/", 2}, {"^", 3} };
 	std::stack<std::pair<std::string, bool>> algoStack;
 	int minusCount = 0;
-	// for (auto token : tokens)
-		// cout << token.first << " ";
-	// cout << "\n";
 	for (auto token : tokens)
 	{
 		if (token.first == "(" && token.second)
@@ -171,7 +165,6 @@ void Calculator::transferToPostfixTokens(const
 			}
 			if (algoStack.empty())
 			{
-				// qInfo() << "Error in brackets!";
 				workStatus = WorkStatus::BracketsError;
 				return;
 			}
@@ -185,9 +178,6 @@ void Calculator::transferToPostfixTokens(const
 				algoStack.pop();
 			}
 		}
-		// for (auto pt : postfixTokens)
-		//    cout << pt.first << " ";
-		// cout << "\n";
 	}
 	while (!algoStack.empty() && algoStack.top().first != "(")
 	{
@@ -196,7 +186,6 @@ void Calculator::transferToPostfixTokens(const
 	}
 	if (!algoStack.empty())
 	{
-		// qInfo() << "Error in brackets!";
 		workStatus = WorkStatus::BracketsError;
 		return;
 	}
@@ -209,7 +198,6 @@ double Calculator::calculatePostfixTokensExpression(
 	std::stack<double> calculateStack;
 	for (auto pt : postfixTokens)
 	{
-		// cout << "fuck: " << pt.first << "\n";
 		if (!m_grammar->isOperator(pt.first)
 			&& !m_grammar->isFunction(pt.first))
 		{
@@ -229,7 +217,6 @@ double Calculator::calculatePostfixTokensExpression(
 						ip++;
 					}
 					valueCode += '$';
-					// cout << valueCode << "\n";
 					ans *= m_calculatedValuesMap[valueCode];
 					flag = true;
 					ip++;
@@ -274,7 +261,6 @@ double Calculator::calculatePostfixTokensExpression(
 			}
 			if (pt.second)
 				ans *= -1;
-			// cout << "ans: " << ans << "\n";
 			calculateStack.push(ans);
 		}
 		else if (m_grammar->isOperator(pt.first))
@@ -293,7 +279,6 @@ double Calculator::calculatePostfixTokensExpression(
 			{
 				if (abs(first) < EPSILON_VALUE)
 				{
-					// qInfo() << "Division on zero. Error!";
 					workStatus = WorkStatus::DivisionOnZeroError;
 					return 1;
 				}
@@ -304,9 +289,7 @@ double Calculator::calculatePostfixTokensExpression(
 		}
 		else {
 			double value = calculateStack.top();
-			// cout << "-->" << value << "\n";
 			calculateStack.pop();
-			// cout << "-->?" << value << "\n";
 			if (pt.first == "cos")
 			{
 				if (pt.second)
@@ -316,7 +299,6 @@ double Calculator::calculatePostfixTokensExpression(
 			}
 			if (pt.first == "sin")
 			{
-				// cout << value << " " << sin(value) << "\n";
 				if (pt.second)
 					calculateStack.push(-sin(value));
 				else
@@ -326,7 +308,6 @@ double Calculator::calculatePostfixTokensExpression(
 			{
 				if (abs(cos(value)) < EPSILON_VALUE)
 				{
-					// qInfo() << "tgValueError";
 					workStatus = WorkStatus::TgValueError;
 					return 1;
 				}
@@ -339,7 +320,6 @@ double Calculator::calculatePostfixTokensExpression(
 			{
 				if (abs(sin(value)) < EPSILON_VALUE)
 				{
-					// qInfo() << "ctgValueError";
 					workStatus = WorkStatus::CtgValueError;
 					return 1;
 				}
@@ -352,7 +332,6 @@ double Calculator::calculatePostfixTokensExpression(
 			{
 				if (abs(value) < EPSILON_VALUE)
 				{
-					// qInfo() << "Num in ln <= 0. Error!";
 					workStatus = WorkStatus::LogarithmNegativeValueError;
 					return 1;
 				}
@@ -368,7 +347,6 @@ double Calculator::calculatePostfixTokensExpression(
 			{
 				if (value < -EPSILON_VALUE)
 				{
-					// qInfo() << "Num in sqrt < 0. Error!";
 					workStatus = WorkStatus::SqrtNegativeValueError;
 					return 1;
 				}
@@ -413,7 +391,6 @@ double Calculator::calculateValue(std::string& currentExpression,
 			return 1;
 		currentExpression += childExpression;
 	}
-	// qInfo() << QString::fromStdString(currentExpression);
 	double calculatedValue = 0;
 	for (auto terminal : *m_grammar->terminals())
 		if (currentNode->value() == terminal)
@@ -423,9 +400,6 @@ double Calculator::calculateValue(std::string& currentExpression,
 		std::vector<std::pair<std::string, bool>> tokens;
 		std::vector<std::pair<std::string, bool>> postfixTokens;
 		collectTokens(currentExpression, tokens);
-		// QDebug info = qInfo();
-		// for (auto t : tokens)
-			// info << QString::fromStdString(t.first);
 		transferToPostfixTokens(tokens, postfixTokens, workStatus);
 		if (workStatus != WorkStatus::Success)
 			return 1;

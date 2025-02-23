@@ -95,7 +95,6 @@ bool LL1Analyser::analyseExpression(std::string expression)
 {
 	m_parseTree = std::make_unique<Node>(m_grammar->startNotTerminal());
 	expression += "$";
-	// qInfo() << QString::fromStdString(expression);
 	std::stack<Node*> expressionStack;
 	std::string endSymbol = "$";
 	std::unique_ptr<Node> endNode =
@@ -123,7 +122,6 @@ bool LL1Analyser::analyseExpression(std::string expression)
 		}
 		if (X == currentString)
 		{
-			// cout << "equality: " << X << "\n";
 			expressionStack.pop();
 			ip += currentString.size();
 			currentString = "";
@@ -140,12 +138,7 @@ bool LL1Analyser::analyseExpression(std::string expression)
 					{
 						flag = true;
 						std::pair<std::string, std::vector<std::string>>
-							porno = m_syntaxAnalyseTable[X][
-							currentString][0];
-						// cout << p.first << "-->";
-						// for (auto c : p.second)
-						//   cout << c;
-						// cout << "\n";
+							porno = m_syntaxAnalyseTable[X][currentString][0];
 						expressionStack.pop();
 						std::vector<std::string>tmp = porno.second;
 						std::reverse(tmp.begin(), tmp.end());
@@ -285,15 +278,15 @@ bool LL1Analyser::grammarCanParse()
 
 void LL1Analyser::printSyntaxAnalyseTable() const
 {
-	for (auto firstElement : m_syntaxAnalyseTable) // p
+	for (auto firstElement : m_syntaxAnalyseTable)
 	{
-		for (auto secondElement : firstElement.second) // v
+		for (auto secondElement : firstElement.second)
 		{
 			QDebug info = qInfo();
 			info << "(" << QString::fromStdString(firstElement.first)
 				<< ", " << QString::fromStdString(secondElement.first)
 				<< "): ";
-			for (auto thirdElement : secondElement.second) // q
+			for (auto thirdElement : secondElement.second)
 			{
 				info << QString::fromStdString(thirdElement.first) << "-->";
 				for (auto fourthElement : thirdElement.second) // c
@@ -307,9 +300,6 @@ void LL1Analyser::printSyntaxAnalyseTable() const
 
 void LL1Analyser::initialiseSyntaxAnalyseTable()
 {
-	// m_grammar->tokensStructure();
-	// m_grammar->terminals();
-	// m_grammar->notTerminals();
 	std::map<std::string, std::vector<std::pair<std::string,
 		std::vector<std::string>>>> terminalsMap;
 	for (auto terminal : *m_grammar->terminals())
@@ -319,18 +309,18 @@ void LL1Analyser::initialiseSyntaxAnalyseTable()
 		std::vector<std::string>>>();
 	for (auto notTerminal : *m_grammar->notTerminals())
 		m_syntaxAnalyseTable[notTerminal] = terminalsMap;
-	for (auto grammarToken : *m_grammar->tokensStructure()) // p
+	for (auto grammarToken : *m_grammar->tokensStructure())
 	{
 		for (auto tokens : grammarToken.second)
 		{
 			std::set<std::string> first = fromTokensFirst(tokens);
-			for (auto firstElement : first) // a
+			for (auto firstElement : first)
 			{
 				if (firstElement.empty())
 				{
-					for (auto followElement : m_follow[grammarToken.first]) // b
+					for (auto followElement : m_follow[grammarToken.first])
 					{
-						for (auto terminal : *m_grammar->terminals()) // q
+						for (auto terminal : *m_grammar->terminals())
 						{
 							if (followElement == terminal)
 							{
@@ -346,7 +336,7 @@ void LL1Analyser::initialiseSyntaxAnalyseTable()
 								grammarToken.first, tokens });
 					}
 				}
-				for (auto terminal : *m_grammar->terminals()) // q
+				for (auto terminal : *m_grammar->terminals())
 				{
 					if (terminal == firstElement)
 					{
