@@ -33,6 +33,7 @@ public:
 	std::vector<std::string>* terminals();
 	std::vector<std::string>* notTerminals();
 	std::vector<std::string>* usedWords();
+	std::vector<std::string>* operators();
 private:
 	std::map<std::string, std::vector<std::vector<std::string>>>
 		m_tokensStructure;
@@ -96,6 +97,11 @@ inline std::vector<std::string>* Grammar::notTerminals()
 inline std::vector<std::string>* Grammar::terminals()
 {
 	return &m_terminals;
+}
+
+inline std::vector<std::string>* Grammar::operators()
+{
+	return &m_operators;
 }
 
 inline bool Grammar::comparator(const std::string& a, const std::string& b)

@@ -18,26 +18,30 @@ DEFINES += QT_DEPRECATED_WARNINGS
 SOURCES += \
     CalculateThread.cpp \
     Calculator.cpp \
+    EditParametersDialog.cpp \
     Grammar.cpp \
     GraphDrawer.cpp \
     LL1Analyser.cpp \
+    MainWindow.cpp \
     Node.cpp \
+    ParametersTableDelegate.cpp \
     Solver.cpp \
     Tester.cpp \
     main.cpp \
-    mainwindow.cpp \
     qcustomplot.cpp
 
 HEADERS += \
     CalculateThread.h \
     Calculator.h \
+    EditParametersDialog.h \
     Grammar.h \
     GraphDrawer.h \
     LL1Analyser.h \
+    MainWindow.h \
     Node.h \
+    ParametersTableDelegate.h \
     Solver.h \
     Tester.h \
-    mainwindow.h \
     qcustomplot.h
 
 # Default rules for deployment.
@@ -46,5 +50,5 @@ else: unix:!android: target.path = /opt/$${TARGET}/bin
 !isEmpty(target.path): INSTALLS += target
 
 FORMS += \
-    DrawProgressDialog.ui \
-    mainwindow.ui
+    EditParametersDialog.ui \
+    MainWindow.ui

@@ -392,7 +392,8 @@ void Solver::calculateHandsFindedSolve(const
 }
 
 void Solver::calculatorSolveRungeCutta(double startX, double startT,
-	double stepLength, int pointsCount, bool* canCalculate)
+	double stepLength, int pointsCount, bool* canCalculate,
+	bool* pauseCalculate)
 {
 	double x = startX;
 	double t = startT;
@@ -403,6 +404,7 @@ void Solver::calculatorSolveRungeCutta(double startX, double startT,
 	int successCalculatedPointsCount = 0;
 	for (int i=0; i < pointsCount; i++)
 	{
+		while (*pauseCalculate && *canCalculate);
 		if (!*canCalculate)
 			return;
 		std::string expression;

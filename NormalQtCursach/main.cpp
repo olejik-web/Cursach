@@ -11,7 +11,7 @@
 #include <complex>
 #include <QApplication>
 #include <QDebug>
-#include "mainwindow.h"
+#include "MainWindow.h"
 #include <qmath.h>
 #include "Grammar.h"
 #define M_PI 3.14159265358979323846

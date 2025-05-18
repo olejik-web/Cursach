@@ -22,5 +22,5 @@ void CalculateThread::run()
 {
 	m_started = true;
 	m_solver.calculatorSolveRungeCutta(m_startX, m_startT, m_stepLength,
-		m_pointsCount, &m_started);
+		m_pointsCount, &m_started, &m_paused);
 }

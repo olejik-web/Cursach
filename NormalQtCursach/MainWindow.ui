@@ -25,17 +25,43 @@
            <x>420</x>
            <y>10</y>
            <width>161</width>
-           <height>151</height>
+           <height>161</height>
           </rect>
          </property>
          <layout class="QGridLayout" name="gridLayout_2">
+          <property name="leftMargin">
+           <number>0</number>
+          </property>
+          <property name="topMargin">
+           <number>0</number>
+          </property>
+          <property name="rightMargin">
+           <number>0</number>
+          </property>
+          <property name="bottomMargin">
+           <number>0</number>
+          </property>
+          <property name="spacing">
+           <number>0</number>
+          </property>
+          <item row="2" column="0">
+           <widget class="QPushButton" name="clearGraphButton">
+            <property name="text">
+             <string>Очистить</string>
+            </property>
+            <property name="icon">
+             <iconset theme="pause">
+              <normaloff>.</normaloff>.</iconset>
+            </property>
+           </widget>
+          </item>
           <item row="0" column="0">
            <layout class="QFormLayout" name="parametersLayout">
             <property name="horizontalSpacing">
-             <number>1</number>
+             <number>0</number>
             </property>
             <property name="verticalSpacing">
-             <number>1</number>
+             <number>0</number>
             </property>
             <item row="0" column="0">
              <widget class="QLabel" name="x0Label">
@@ -65,7 +91,7 @@
                <double>10000.000000000000000</double>
               </property>
               <property name="value">
-               <double>-1.000000000000000</double>
+               <double>10.000000000000000</double>
               </property>
              </widget>
             </item>
@@ -91,7 +117,7 @@
                <double>10000.000000000000000</double>
               </property>
               <property name="value">
-               <double>5.000000000000000</double>
+               <double>0.100000000000000</double>
               </property>
              </widget>
             </item>
@@ -142,8 +168,20 @@
           </item>
           <item row="1" column="0">
            <widget class="QPushButton" name="drawGraphButton">
+            <property name="font">
+             <font>
+              <pointsize>9</pointsize>
+             </font>
+            </property>
             <property name="text">
              <string>Построить график</string>
+            </property>
+           </widget>
+          </item>
+          <item row="3" column="0">
+           <widget class="QPushButton" name="editParametersButton">
+            <property name="text">
+             <string>Параметры</string>
             </property>
            </widget>
           </item>
@@ -187,7 +225,7 @@
       <item>
        <widget class="QLineEdit" name="differentionalEquationLineEdit">
         <property name="text">
-         <string>(x-2sqrt(tx))/t</string>
+         <string>(x-2*sqrt(t*x))/t</string>
         </property>
        </widget>
       </item>

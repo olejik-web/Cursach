@@ -15,6 +15,11 @@ GraphDrawer::GraphDrawer(QCustomPlot* plot, Grammar* grammar,
 
 GraphDrawer::~GraphDrawer()
 {
+	stop();
+}
+
+void GraphDrawer::stop()
+{
 	if (m_calculateRungeKuttaThread)
 	{
 		m_calculateRungeKuttaThread->quit();

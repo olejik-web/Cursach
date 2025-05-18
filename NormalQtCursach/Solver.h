@@ -18,7 +18,8 @@ public:
 	Solver(Grammar* grammar, LL1Analyser* analyser,
 		QObject* parent = nullptr);
 	void calculatorSolveRungeCutta(double startX, double startT,
-		double stepLength, int pointsCount, bool* canCalculate);
+		double stepLength, int pointsCount, bool* canCalculate,
+		bool* pauseCalculate);
 	void compilerSolveRungeCutta(const std::string& differentialEquation,
 		double startX, double startT, double stepLength, int pointsCount,
 		QVector<double>& xValues, QVector<double>& tValues,

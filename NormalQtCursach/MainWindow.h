@@ -15,6 +15,7 @@
 #include "Solver.h"
 #include "GraphDrawer.h"
 #include "CalculateThread.h"
+#include "EditParametersDialog.h"
 
 namespace Ui {
 class MainWindow;
@@ -30,12 +31,23 @@ public:
 		QVector<double>& y, const QColor& color);
 	void drawInputDataGraph();
 	void moveParametersWidget(QRect currentPlotRect);
-	void allowDrawGraph();
+	void allowEdit();
+	void clearGraph();
+	void process();
+	void setParametersValues(std::string& diffur);
 private:
+	enum Status
+	{
+		NotWork,
+		Work,
+		Pause
+	};
+	Status m_status{NotWork};
 	Ui::MainWindow* ui;
 	QDoubleValidator m_doubleValidator;
 	Grammar m_grammar;
 	LL1Analyser m_analyser;
 	std::unique_ptr<GraphDrawer> m_graphDrawer;
+	EditParametersDialog m_editParametersDialog;
 };
 #endif // MAINWINDOW_H

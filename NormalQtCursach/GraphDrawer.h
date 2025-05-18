@@ -34,6 +34,9 @@ public:
 	void drawCalculatorRungeKuttaSolveFullGraph();
 	void clearPlot();
 	void updatePlot();
+	void stop();
+	void pauseDrawing();
+	void continueDrawing();
 signals:
 	void drawedCalculatorRungeKuttaSolveFullGraph();
 private:
@@ -45,10 +48,21 @@ private:
 	QTimer m_timer;
 };
 
+inline void GraphDrawer::pauseDrawing()
+{
+	m_calculateRungeKuttaThread->pause();
+}
+
+inline void GraphDrawer::continueDrawing()
+{
+	m_calculateRungeKuttaThread->continueCalculate();
+}
+
 inline void GraphDrawer::drawNextPointCalculateRungeKuttaSolveGraph(
 	double t, double x)
 {
-	calculatorRungeKuttaSolvePlotGraph->addData(t, x);
+	if (m_plot->graphCount())
+		calculatorRungeKuttaSolvePlotGraph->addData(t, x);
 }
 
 inline void GraphDrawer::updatePlot()

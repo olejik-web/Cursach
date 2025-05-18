@@ -16,6 +16,8 @@ public:
 	void run() override;
 	void updateStatusBar(const QString& message, int timeout = 0);
 	void stop();
+	void pause();
+	void continueCalculate();
 signals:
 	void calculatePoint(double t, double x);
 private:
@@ -27,7 +29,18 @@ private:
 	int m_pointsCount;
 	QStatusBar* m_statusBar;
 	bool m_started{false};
+	bool m_paused{false};
 };
+
+inline void CalculateThread::pause()
+{
+	m_paused = true;
+}
+
+inline void CalculateThread::continueCalculate()
+{
+	m_paused = false;
+}
 
 inline void CalculateThread::stop()
 {
@@ -37,7 +50,8 @@ inline void CalculateThread::stop()
 inline void CalculateThread::updateStatusBar(
 	const QString& message, int timeout)
 {
-	m_statusBar->showMessage(message);
+	if (m_started && !m_paused)
+		m_statusBar->showMessage(message);
 }
 
 #endif // CALCULATETHREAD_H

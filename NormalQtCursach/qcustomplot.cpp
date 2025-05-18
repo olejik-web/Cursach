@@ -21079,7 +21079,7 @@ void QCPGraph::addData(const QVector<double> &keys, const QVector<double> &value
 */
 void QCPGraph::addData(double key, double value)
 {
-  mDataContainer->add(QCPGraphData(key, value));
+	mDataContainer->add(QCPGraphData(key, value));
 }
 
 /*!
