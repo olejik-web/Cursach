@@ -126,7 +126,8 @@ bool LL1Analyser::analyseExpression(std::string expression)
 			ip += currentString.size();
 			currentString = "";
 		}
-		else {
+		else 
+		{
 			bool flag = false;
 			for (auto notTerminal : *m_grammar->notTerminals())
 			{
